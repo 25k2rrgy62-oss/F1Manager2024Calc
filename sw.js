@@ -1,5 +1,5 @@
 // Caches the app so it keeps working offline after the first visit.
-const CACHE = "f1m-setup-v1";
+const CACHE = "f1m-setup-v2";
 const FILES = ["./", "index.html", "manifest.webmanifest", "icon.svg"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES))); self.skipWaiting(); });
 self.addEventListener("activate", e => {

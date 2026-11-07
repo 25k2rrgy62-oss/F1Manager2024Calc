@@ -50,22 +50,38 @@ button.ghost{background:transparent}
 .muted{color:var(--muted)}
 .small{font-size:13px}
 /* setup sliders */
-.param{display:grid;grid-template-columns:130px 1fr 92px;gap:10px;align-items:center;padding:6px 0}
+.param{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.param:last-child{border-bottom:0}
 .param .name{font-weight:600;font-size:14px}
-.param .val{font-variant-numeric:tabular-nums;text-align:right;font-weight:600}
-input[type=range]{width:100%;accent-color:var(--accent)}
-@media (max-width:520px){ .param{grid-template-columns:1fr 84px} .param input[type=range]{grid-column:1/-1;grid-row:2} }
+.param .val{font-variant-numeric:tabular-nums;text-align:right;font-weight:700;font-size:16px}
+.param .ctl{grid-column:1/-1;display:flex;align-items:center;gap:10px}
+.step{width:40px;height:40px;flex:0 0 40px;padding:0;font-size:20px;font-weight:700;line-height:1;border-radius:50%;touch-action:manipulation}
+.param .ticks{grid-column:1/-1;display:flex;justify-content:space-between;font-size:11px;color:var(--muted);padding:0 50px}
+input[type=range]{-webkit-appearance:none;appearance:none;flex:1;min-width:0;height:40px;background:transparent;margin:0;touch-action:pan-y}
+input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:4px;background:linear-gradient(90deg,var(--accent) 0 var(--pct,50%),var(--line) var(--pct,50%) 100%)}
+input[type=range]::-moz-range-track{height:8px;border-radius:4px;background:var(--line)}
+input[type=range]::-moz-range-progress{height:8px;border-radius:4px;background:var(--accent)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;margin-top:-10px;border-radius:50%;background:#fff;border:3px solid var(--accent);box-shadow:0 1px 4px rgba(0,0,0,.35)}
+input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#fff;border:3px solid var(--accent);box-shadow:0 1px 4px rgba(0,0,0,.35)}
+.baserow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.baserow select{flex:1 1 200px;width:auto}
 /* feedback grid */
-.fbgrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:8px}
-.fbcell{display:flex;flex-direction:column;gap:4px}
-.fbcell span{font-size:12px;color:var(--muted);text-align:center}
-.fbbtn{height:36px;font-weight:600;font-size:13px;padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fbgrid{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+.fbrow{display:grid;grid-template-columns:96px 1fr;gap:8px;align-items:center}
+.fbrow .lbl{font-weight:600;font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{min-height:38px;min-width:44px;padding:0 10px;font-weight:600;font-size:13px;touch-action:manipulation}
+.chip.sub{min-height:32px;font-size:12px}
+.chip:not(.on){background:var(--panel2)!important;border-color:var(--line)!important;color:var(--muted)!important}
+.chip.on{box-shadow:0 0 0 1px currentColor inset}
+.fb-unknown.on{background:var(--panel2);border-color:var(--text);color:var(--text)}
+@media (max-width:520px){ .fbrow{grid-template-columns:1fr} }
 .fb-unknown{color:var(--muted)}
 .fb-optimal{background:color-mix(in srgb,var(--opt) 20%,transparent);border-color:var(--opt);color:var(--opt)}
 .fb-great{background:color-mix(in srgb,var(--great) 18%,transparent);border-color:var(--great);color:var(--great)}
 .fb-good{background:color-mix(in srgb,var(--ok) 16%,transparent);border-color:var(--ok);color:var(--ok)}
 .fb-bad,.fb-badhigh,.fb-badlow{background:color-mix(in srgb,var(--bad) 16%,transparent);border-color:var(--bad);color:var(--bad)}
-@media (max-width:520px){ .fbgrid{grid-template-columns:repeat(2,minmax(0,1fr))} }
 /* bars */
 .bar{position:relative;height:22px;background:var(--panel2);border:1px solid var(--line);border-radius:6px;overflow:hidden}
 .bar .feas{position:absolute;top:0;bottom:0;min-width:3px;background:var(--feas)}
@@ -134,11 +150,22 @@ footer{max-width:1180px;margin:0 auto;padding:8px 16px 32px;color:var(--muted);f
     <div id="params"></div>
     <div class="row" style="margin-top:6px">
       <button class="small" id="useRec">Load recommended</button>
-      <button class="small" id="usePreset">Load track starting point</button>
     </div>
+    <h2 style="margin-top:20px">Baseline presets</h2>
+    <div class="small muted">A baseline is the setup you start a weekend from. Save your own, and pick one as the default for this track.</div>
+    <div class="baserow">
+      <select id="baseSel" aria-label="Baseline preset"></select>
+      <button class="small" id="baseLoad">Load</button>
+    </div>
+    <div class="baserow">
+      <button class="small" id="baseSave">Save current as baseline…</button>
+      <button class="small" id="baseDefault">Make default for this track</button>
+      <button class="small" id="baseDel">Delete</button>
+    </div>
+    <div class="small muted" id="baseNote" style="margin-top:6px"></div>
 
     <h2 style="margin-top:20px">2 · Driver feedback from that run</h2>
-    <div class="small muted">Tap to cycle: — → Optimal → Great → Good → Bad → Bad (too high) → Bad (too low). Leave “—” if unknown.</div>
+    <div class="small muted">Tap what the driver said for each stat. Leave “—” if you don't know. For Bad, also pick the direction if the game tells you.</div>
     <div class="fbgrid" id="fbgrid"></div>
     <div class="row" style="margin-top:12px">
       <button class="primary" id="addRun">Add practice run</button>
@@ -227,18 +254,20 @@ const setupFromEffects = e => INV.map(row=>row.reduce((a,v,k)=>a+v*(e[k]-STATS[k
 
 /* ---------------- Tracks ----------------
    ideal: typical ideal feedback window per stat (from game data, where known).
-   Used only to propose a starting setup; the solver itself relies on your feedback. */
+   Used only to propose a starting setup; the solver itself relies on your feedback.
+   base: community starting setup (0..1 scale) for in-game tracks without ideal data.
+   inGame:false = circuit is not in F1 Manager 2024, so it is left out of the track list. */
 const TRACKS = {
   BH:{gp:"Bahrain",        circuit:"Sakhir",              ideal:[[.57,.61],[.33,.40],[.50,.57],[.35,.41],[.64,.70]]},
   SA:{gp:"Saudi Arabia",   circuit:"Jeddah",              ideal:[[.72,.79],[.08,.14],[.73,.76],[.10,.20],[.61,.74]]},
   AU:{gp:"Australia",      circuit:"Albert Park",         ideal:[[.60,.65],[.39,.46],[.60,.70],[.31,.39],[.41,.45]]},
   JP:{gp:"Japan",          circuit:"Suzuka",              ideal:[[.58,.62],[.20,.25],[.63,.72],[.38,.51],[.33,.47]]},
-  CN:{gp:"China",          circuit:"Shanghai",            ideal:null},
+  CN:{gp:"China",          circuit:"Shanghai",            ideal:null, base:[.30,.357143,.875,.125,.80]},
   MIA:{gp:"Miami",         circuit:"Miami Intl. Autodrome",ideal:[[.53,.60],[.26,.46],[.66,.76],[.50,.69],[.34,.43]]},
   EMI:{gp:"Emilia-Romagna",circuit:"Imola",               ideal:[[.56,.61],[.22,.30],[.67,.74],[.38,.56],[.42,.50]]},
   MC:{gp:"Monaco",         circuit:"Monte Carlo",         ideal:[[.54,.60],[.28,.52],[.78,.98],[.25,.38],[0,.01]]},
   ES:{gp:"Spain",          circuit:"Barcelona-Catalunya", ideal:[[.52,.65],[.40,.48],[.68,.82],[.28,.40],[.19,.30]]},
-  MAD:{gp:"Spain (Madrid)",circuit:"Madring",             ideal:null},
+  MAD:{gp:"Spain (Madrid)",circuit:"Madring",             ideal:null, inGame:false},
   CA:{gp:"Canada",         circuit:"Montréal",            ideal:[[.40,.50],[.55,.65],[.37,.41],[.59,.74],[.59,.64]]},
   AT:{gp:"Austria",        circuit:"Red Bull Ring",       ideal:[[.38,.43],[.55,.69],[.41,.52],[.72,.79],[.37,.45]]},
   GB:{gp:"Great Britain",  circuit:"Silverstone",         ideal:[[.63,.69],[.26,.36],[.55,.68],[.15,.24],[.56,.69]]},
@@ -251,8 +280,8 @@ const TRACKS = {
   US:{gp:"United States",  circuit:"Circuit of the Americas",ideal:[[.58,.62],[.28,.44],[.62,.75],[.57,.69],[.33,.47]]},
   MX:{gp:"Mexico City",    circuit:"Hermanos Rodríguez",  ideal:[[.50,.57],[.34,.46],[.61,.69],[.59,.71],[.36,.49]]},
   BR:{gp:"São Paulo",      circuit:"Interlagos",          ideal:[[.52,.58],[.39,.49],[.54,.67],[.56,.71],[.42,.50]]},
-  LV:{gp:"Las Vegas",      circuit:"Las Vegas Strip",     ideal:null},
-  QA:{gp:"Qatar",          circuit:"Lusail",              ideal:null},
+  LV:{gp:"Las Vegas",      circuit:"Las Vegas Strip",     ideal:null, base:[0,.214286,1,.375,.55]},
+  QA:{gp:"Qatar",          circuit:"Lusail",              ideal:null, base:[.80,.571429,.25,.8125,.90]},
   AE:{gp:"Abu Dhabi",      circuit:"Yas Marina",          ideal:[[.45,.53],[.49,.62],[.48,.62],[.47,.69],[.44,.56]]},
 };
 
@@ -260,6 +289,7 @@ const CALENDARS = {
   2024:["BH","SA","AU","JP","CN","MIA","EMI","MC","CA","ES","AT","GB","HU","BE","NL","IT","AZ","SG","US","MX","BR","LV","QA","AE"],
   2025:["AU","CN","JP","BH","SA","MIA","EMI","MC","ES","CA","AT","GB","BE","HU","NL","IT","AZ","SG","US","MX","BR","LV","QA","AE"],
   // 2026: Bahrain & Saudi Arabia were cancelled (22 rounds). Kept at the end, marked, in case you still want to label them.
+  // Madrid (Madring) is not in F1 Manager 2024, so it is hidden from the list; round numbers stay as on the real calendar.
   2026:["AU","CN","JP","MIA","CA","MC","ES","AT","GB","BE","HU","NL","IT","MAD","AZ","SG","US","MX","BR","LV","QA","AE"],
 };
 const CANCELLED = {2026:["BH","SA"]};
@@ -293,8 +323,9 @@ const DRIVERS = {
 
 /* ---------------- Storage ---------------- */
 const LS_KEY = "f1m-setup-calc-v1";
-let DB = {ui:{}, sessions:{}};
+let DB = {ui:{}, sessions:{}, baselines:[], defaultBase:{}};
 try { const raw = localStorage.getItem(LS_KEY); if(raw) DB = Object.assign(DB, JSON.parse(raw)); } catch(e){}
+DB.baselines = DB.baselines||[]; DB.defaultBase = DB.defaultBase||{};
 const save = ()=>{ try{ localStorage.setItem(LS_KEY, JSON.stringify(DB)); }catch(e){} };
 
 /* ---------------- Solver ---------------- */
@@ -378,14 +409,20 @@ let lastSolve = null;
 function sessionKey(){ return `${cur.year}|${cur.track}|${cur.driver}`; }
 function session(){
   const k=sessionKey();
-  if(!DB.sessions[k]) DB.sessions[k] = {setup:presetNorm(cur.track), runs:[]};
+  if(!DB.sessions[k]) DB.sessions[k] = {setup:baselineNorm(cur.track), runs:[]};
   return DB.sessions[k];
 }
 function presetNorm(code){
   const t=TRACKS[code];
+  if(t && t.base) return t.base.map((x,i)=>snapIdx(i,x)/PARAMS[i].n);
   if(!t || !t.ideal) return [0.5,0.5,0.5,0.5,0.5];
   const mid=t.ideal.map(([a,b])=>(a+b)/2);
   return setupFromEffects(mid).map((x,i)=>snapIdx(i,Math.max(0,Math.min(1,x)))/PARAMS[i].n);
+}
+/* starting setup for a track: your default baseline if set, else the built-in track baseline */
+function baselineNorm(code){
+  const id=DB.defaultBase[code], b=id && DB.baselines.find(x=>x.id===id);
+  return b ? b.s.slice() : presetNorm(code);
 }
 function driverName(){
   if(cur.driver==="__custom") return ($("customName").value.trim()||"Custom driver");
@@ -399,8 +436,9 @@ function fillYear(){
   $("year").value = cur.year;
 }
 function fillTrack(){
-  const cal=CALENDARS[cur.year], canc=CANCELLED[cur.year]||[];
-  let html = cal.map((c,i)=>`<option value="${c}">R${i+1} · ${TRACKS[c].gp} — ${TRACKS[c].circuit}</option>`).join("");
+  const full=CALENDARS[cur.year], canc=CANCELLED[cur.year]||[];
+  const cal=full.filter(c=>TRACKS[c].inGame!==false);
+  let html = cal.map(c=>`<option value="${c}">R${full.indexOf(c)+1} · ${TRACKS[c].gp} — ${TRACKS[c].circuit}</option>`).join("");
   if(canc.length) html += `<optgroup label="Cancelled">`+canc.map(c=>`<option value="${c}">${TRACKS[c].gp} — ${TRACKS[c].circuit} (cancelled)</option>`).join("")+`</optgroup>`;
   $("track").innerHTML = html;
   const want = DB.ui.track;
@@ -423,8 +461,9 @@ function renderChip(){
   const t=TRACKS[cur.track];
   const notes=[];
   if((CANCELLED[cur.year]||[]).includes(cur.track)) notes.push("This race was cancelled in "+cur.year+".");
-  if(!t.ideal) notes.push("No game data for this circuit yet, so the starting point is neutral — the solver still works from your feedback.");
-  if(cur.year==="2026") notes.push("F1 Manager 2024 uses its own grid and cars; season/driver here is a label for your save.");
+  const hidden=CALENDARS[cur.year].filter(c=>TRACKS[c].inGame===false);
+  if(hidden.length) notes.push(hidden.map(c=>TRACKS[c].circuit).join(", ")+" is not in F1 Manager 2024, so it isn't listed.");
+  if(cur.year!=="2024") notes.push("Setups are for F1 Manager 2024's cars and tracks; the "+cur.year+" season and driver are labels for your save.");
   $("trackNote").textContent = notes.join(" ");
   $("histTitle").textContent = `${driverName()} · ${t.gp} ${cur.year}`;
 }
@@ -434,30 +473,45 @@ function renderParams(){
   const s=session().setup;
   $("params").innerHTML = PARAMS.map((p,i)=>{
     const v=fromNorm(i,s[i]);
-    return `<div class="param"><div class="name">${p.name}</div>
-      <input type="range" min="0" max="${p.n}" step="1" value="${snapIdx(i,s[i])}" data-i="${i}" aria-label="${p.name}">
-      <div class="val" id="pv${i}">${p.fmt(v)}</div></div>`;
+    const idx=snapIdx(i,s[i]);
+    return `<div class="param"><div class="name">${p.name}</div><div class="val" id="pv${i}">${p.fmt(v)}</div>
+      <div class="ctl"><button class="step" data-i="${i}" data-d="-1" aria-label="Decrease ${p.name}">−</button>
+      <input type="range" min="0" max="${p.n}" step="1" value="${idx}" data-i="${i}" aria-label="${p.name}" style="--pct:${idx/p.n*100}%">
+      <button class="step" data-i="${i}" data-d="1" aria-label="Increase ${p.name}">+</button></div>
+      <div class="ticks"><span>${p.fmt(p.min)}</span><span>${p.fmt(p.max)}</span></div></div>`;
   }).join("");
-  $("params").querySelectorAll("input[type=range]").forEach(el=>{
-    el.addEventListener("input",()=>{
-      const i=+el.dataset.i; session().setup[i]=(+el.value)/PARAMS[i].n;
-      $("pv"+i).textContent = PARAMS[i].fmt(fromNorm(i,session().setup[i]));
-      save(); renderBars();
-    });
-  });
+  const setIdx=(i,idx)=>{
+    idx=Math.max(0,Math.min(PARAMS[i].n,idx));
+    session().setup[i]=idx/PARAMS[i].n;
+    const el=$("params").querySelector(`input[data-i="${i}"]`); el.value=idx; el.style.setProperty("--pct",idx/PARAMS[i].n*100+"%");
+    $("pv"+i).textContent = PARAMS[i].fmt(fromNorm(i,session().setup[i]));
+    save(); renderBars();
+  };
+  $("params").querySelectorAll("input[type=range]").forEach(el=>el.addEventListener("input",()=>setIdx(+el.dataset.i,+el.value)));
+  $("params").querySelectorAll(".step").forEach(b=>b.addEventListener("click",()=>{
+    const i=+b.dataset.i; setIdx(i, snapIdx(i,session().setup[i]) + (+b.dataset.d));
+  }));
 }
 function renderFb(){
-  $("fbgrid").innerHTML = STATS.map((st,k)=>`<div class="fbcell"><span>${st.name}</span>
-    <button class="fbbtn fb-${fbDraft[k]}" data-k="${k}" title="Click to cycle, right-click to go back">${FB_LABEL[fbDraft[k]]}</button></div>`).join("");
-  $("fbgrid").querySelectorAll("button").forEach(b=>{
-    const step=dir=>{ const k=+b.dataset.k; fbDraft[k]=FB[(FB.indexOf(fbDraft[k])+dir+FB.length)%FB.length]; renderFb(); };
-    b.addEventListener("click",()=>step(1));
-    b.addEventListener("contextmenu",ev=>{ev.preventDefault(); step(-1);});
-  });
+  const MAIN=["unknown","optimal","great","good","bad"];
+  const isBad=f=>f==="bad"||f==="badhigh"||f==="badlow";
+  $("fbgrid").innerHTML = STATS.map((st,k)=>{
+    const f=fbDraft[k];
+    const main=MAIN.map(m=>{ const on = m===f || (m==="bad"&&isBad(f));
+      return `<button class="chip fb-${m}${on?" on":""}" data-k="${k}" data-v="${m}" aria-pressed="${on}">${FB_LABEL[m]}</button>`; }).join("");
+    const sub = isBad(f) ? `<div class="chips" style="margin-top:6px">`+[["bad","Direction ?"],["badhigh","Too high ↑"],["badlow","Too low ↓"]]
+      .map(([v,l])=>`<button class="chip sub fb-bad${v===f?" on":""}" data-k="${k}" data-v="${v}" aria-pressed="${v===f}">${l}</button>`).join("")+`</div>` : "";
+    return `<div class="fbrow"><div class="lbl">${st.name}</div><div><div class="chips">${main}</div>${sub}</div></div>`;
+  }).join("");
+  $("fbgrid").querySelectorAll(".chip").forEach(b=>b.addEventListener("click",()=>{
+    const k=+b.dataset.k, v=b.dataset.v;
+    fbDraft[k] = (v==="bad" && isBad(fbDraft[k]) && !b.classList.contains("sub")) ? fbDraft[k] : v;
+    renderFb();
+  }));
 }
 function runSolve(){
   const ses=session();
-  const start = ses.runs.length ? ses.runs[ses.runs.length-1].s : presetNorm(cur.track);
+  const start = ses.runs.length ? ses.runs[ses.runs.length-1].s : baselineNorm(cur.track);
   lastSolve = solve(ses.runs, start);
   renderRec(); renderBars();
 }
@@ -477,7 +531,7 @@ function renderRec(){
     st.textContent=`Your feedback contradicts itself for ${bad}. Check the last runs (wrong setup value or feedback entered?) and remove the bad one.`;
     return;
   }
-  if(!ses.runs.length){ st.textContent = "This is the track starting point. Run it in practice, enter the feedback, and press “Add practice run”."; return; }
+  if(!ses.runs.length){ st.textContent = "This is your baseline for this track. Run it in practice, enter the feedback, and press “Add practice run”."; return; }
   const widths = r.F.map(iv=>iv.reduce((a,[x,y])=>a+(y-x),0));
   const nailed = widths.filter(w=>w<=2*BAND.opt+0.003).length;
   const unknown = r.known.filter(x=>!x).length;
@@ -510,7 +564,21 @@ function renderHist(){
   $("hist").innerHTML = `<tr><th>#</th>${PARAMS.map(p=>`<th>${p.name}</th>`).join("")}${STATS.map(s=>`<th>${s.name}</th>`).join("")}</tr>` +
     runs.map((r,n)=>`<tr><td>${n+1}</td>${PARAMS.map((p,i)=>`<td>${p.fmt(fromNorm(i,r.s[i]))}</td>`).join("")}${r.fb.map(fbPill).join("")}</tr>`).join("");
 }
-function renderAll(){ renderChip(); renderParams(); renderFb(); renderHist(); runSolve(); }
+function renderBase(keep){
+  const sel=$("baseSel"), prev=keep||sel.value;
+  const def=DB.defaultBase[cur.track];
+  const mine=DB.baselines.filter(b=>b.track===cur.track), other=DB.baselines.filter(b=>b.track!==cur.track);
+  const opt=b=>`<option value="${b.id}">${esc(b.name)}${b.id===def?" ★ default":""}</option>`;
+  sel.innerHTML = `<option value="__track">${esc(TRACKS[cur.track].circuit)} built-in baseline${def?"":" ★ default"}</option>`
+    + (mine.length?`<optgroup label="Your baselines · this track">${mine.map(opt).join("")}</optgroup>`:"")
+    + (other.length?`<optgroup label="Your baselines · other tracks">${other.map(b=>opt({...b,name:b.name+" ("+(TRACKS[b.track]?TRACKS[b.track].circuit:"any")+")"})).join("")}</optgroup>`:"");
+  sel.value = [...sel.options].some(o=>o.value===prev) ? prev : (def||"__track");
+  const b=DB.baselines.find(x=>x.id===sel.value);
+  const s = b ? b.s : presetNorm(cur.track);
+  $("baseNote").textContent = PARAMS.map((p,i)=>p.name+" "+p.fmt(fromNorm(i,s[i]))).join(" · ");
+  $("baseDel").disabled = !b;
+}
+function renderAll(){ renderChip(); renderParams(); renderFb(); renderHist(); renderBase(); runSolve(); }
 
 function persistUi(){ DB.ui = {year:cur.year, track:cur.track, driver:cur.driver, customName:$("customName").value, theme:DB.ui.theme}; save(); }
 
@@ -529,7 +597,29 @@ $("addRun").addEventListener("click",()=>{
 });
 $("resetFb").addEventListener("click",()=>{ fbDraft.fill("unknown"); renderFb(); });
 $("useRec").addEventListener("click",()=>{ if(!lastSolve) return; session().setup=lastSolve.recNorm.slice(); save(); renderParams(); renderRec(); renderBars(); });
-$("usePreset").addEventListener("click",()=>{ session().setup=presetNorm(cur.track); save(); renderParams(); renderRec(); renderBars(); });
+$("baseSel").addEventListener("change",()=>renderBase());
+$("baseLoad").addEventListener("click",()=>{
+  const b=DB.baselines.find(x=>x.id===$("baseSel").value);
+  session().setup = b ? b.s.slice() : presetNorm(cur.track); save(); renderParams(); runSolve();
+});
+$("baseSave").addEventListener("click",()=>{
+  const name=(prompt("Name for this baseline:", `${TRACKS[cur.track].circuit} base`)||"").trim().slice(0,40);
+  if(!name) return;
+  const id="b"+Date.now().toString(36);
+  DB.baselines.push({id,name,track:cur.track,s:session().setup.map((x,i)=>snapIdx(i,x)/PARAMS[i].n)});
+  save(); renderBase(id);
+});
+$("baseDefault").addEventListener("click",()=>{
+  const v=$("baseSel").value;
+  if(v==="__track") delete DB.defaultBase[cur.track]; else DB.defaultBase[cur.track]=v;
+  save(); renderBase(v); if(!session().runs.length) runSolve();
+});
+$("baseDel").addEventListener("click",()=>{
+  const v=$("baseSel").value, b=DB.baselines.find(x=>x.id===v); if(!b || !confirm(`Delete baseline "${b.name}"?`)) return;
+  DB.baselines=DB.baselines.filter(x=>x.id!==v);
+  for(const t in DB.defaultBase) if(DB.defaultBase[t]===v) delete DB.defaultBase[t];
+  save(); renderBase("__track");
+});
 $("undo").addEventListener("click",()=>{ session().runs.pop(); save(); renderHist(); runSolve(); });
 $("clearAll").addEventListener("click",()=>{ if(!confirm("Delete all runs for this driver at this track?")) return; delete DB.sessions[sessionKey()]; save(); renderAll(); });
 $("exportBtn").addEventListener("click",()=>{
@@ -539,7 +629,9 @@ $("exportBtn").addEventListener("click",()=>{
 $("importBtn").addEventListener("click",()=>$("importFile").click());
 $("importFile").addEventListener("change",async ev=>{
   const f=ev.target.files[0]; if(!f) return;
-  try{ const d=JSON.parse(await f.text()); if(!d.sessions) throw 0; DB.sessions=Object.assign(DB.sessions,d.sessions); save(); renderAll(); alert("Imported."); }
+  try{ const d=JSON.parse(await f.text()); if(!d.sessions) throw 0; DB.sessions=Object.assign(DB.sessions,d.sessions);
+    if(Array.isArray(d.baselines)) for(const b of d.baselines) if(!DB.baselines.some(x=>x.id===b.id)) DB.baselines.push(b);
+    if(d.defaultBase) DB.defaultBase=Object.assign(DB.defaultBase,d.defaultBase); save(); renderAll(); alert("Imported."); }
   catch(e){ alert("That file doesn't look like an export from this tool."); }
   ev.target.value="";
 });
