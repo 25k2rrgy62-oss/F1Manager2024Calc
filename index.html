@@ -8,6 +8,11 @@
 <meta name="theme-color" content="#111318">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="F1M Setup">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <style>
 :root{
   --bg:#f4f5f7; --panel:#ffffff; --panel2:#f0f1f4; --line:#d9dce3; --text:#16181d; --muted:#626976;
@@ -623,7 +628,11 @@ $("baseDel").addEventListener("click",()=>{
 $("undo").addEventListener("click",()=>{ session().runs.pop(); save(); renderHist(); runSolve(); });
 $("clearAll").addEventListener("click",()=>{ if(!confirm("Delete all runs for this driver at this track?")) return; delete DB.sessions[sessionKey()]; save(); renderAll(); });
 $("exportBtn").addEventListener("click",()=>{
-  const blob=new Blob([JSON.stringify(DB,null,1)],{type:"application/json"});
+  const json=JSON.stringify(DB,null,1);
+  // Inside the iOS app: hand the file to the native share sheet.
+  const bridge = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.exportData;
+  if(bridge){ bridge.postMessage(json); return; }
+  const blob=new Blob([json],{type:"application/json"});
   const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="f1m-setups.json"; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 });
 $("importBtn").addEventListener("click",()=>$("importFile").click());

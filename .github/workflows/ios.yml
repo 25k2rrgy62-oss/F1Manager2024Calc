@@ -1,0 +1,44 @@
+# Builds the iOS app on a macOS runner and uploads an unsigned .ipa.
+# Sideload it with AltStore or Sideloadly (they sign it with your Apple ID),
+# or open the project in Xcode to install / publish it yourself.
+name: Build iOS app
+
+on:
+  push:
+    paths:
+      - "ios/**"
+      - "index.html"
+      - "icon.svg"
+      - ".github/workflows/ios.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Generate Xcode project
+        working-directory: ios
+        run: |
+          ./sync-web.sh
+          xcodegen generate
+      - name: Build (unsigned, device)
+        run: |
+          xcodebuild -project ios/F1MSetup.xcodeproj -scheme F1MSetup \
+            -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build
+      - name: Package .ipa
+        run: |
+          APP=build/Build/Products/Release-iphoneos/F1MSetup.app
+          test -f "$APP/www/index.html"
+          mkdir Payload && cp -R "$APP" Payload/
+          zip -qry F1MSetup-unsigned.ipa Payload
+          ls -lh F1MSetup-unsigned.ipa
+      - uses: actions/upload-artifact@v4
+        with:
+          name: F1MSetup-unsigned-ipa
+          path: F1MSetup-unsigned.ipa
