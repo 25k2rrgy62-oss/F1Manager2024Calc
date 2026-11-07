@@ -1,5 +1,6 @@
 # Publishes the calculator to GitHub Pages on every push to main.
-# One-time setup: repo Settings -> Pages -> Build and deployment -> Source: "GitHub Actions".
+# If the first run fails at "configure-pages", turn Pages on once by hand:
+# repo Settings -> Pages -> Build and deployment -> Source: "GitHub Actions".
 name: Deploy website
 
 on:
@@ -29,6 +30,8 @@ jobs:
           mkdir _site
           cp index.html sw.js manifest.webmanifest icon.svg apple-touch-icon.png .nojekyll _site/
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true   # turns Pages on (Source: GitHub Actions) if it isn't yet
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
