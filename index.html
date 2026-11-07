@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>F1M Setup Calculator</title>
+<meta name="description" content="Offline car setup solver for F1 Manager 2024 with 2024, 2025 and 2026 calendars and drivers.">
+<meta name="theme-color" content="#111318">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<style>
+:root{
+  --bg:#f4f5f7; --panel:#ffffff; --panel2:#f0f1f4; --line:#d9dce3; --text:#16181d; --muted:#626976;
+  --accent:#e10600; --accent-fg:#fff; --ok:#0f9d58; --great:#2563eb; --opt:#0891b2; --bad:#dc2626;
+  --feas:rgba(8,145,178,.22); --shadow:0 1px 2px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.05);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1115; --panel:#171a20; --panel2:#1f232b; --line:#2c313b; --text:#eceef2; --muted:#9aa1ad;
+    --accent:#ff1e1e; --ok:#34d399; --great:#60a5fa; --opt:#22d3ee; --bad:#f87171; --feas:rgba(34,211,238,.22);
+    --shadow:0 1px 2px rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1115; --panel:#171a20; --panel2:#1f232b; --line:#2c313b; --text:#eceef2; --muted:#9aa1ad;
+  --accent:#ff1e1e; --ok:#34d399; --great:#60a5fa; --opt:#22d3ee; --bad:#f87171; --feas:rgba(34,211,238,.22);
+  --shadow:0 1px 2px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:5}
+header h1{font-size:17px;margin:0;letter-spacing:.2px}
+header .stripe{width:6px;height:26px;background:var(--accent);border-radius:2px;transform:skewX(-14deg)}
+header .sp{flex:1}
+main{max-width:1180px;margin:0 auto;padding:16px;display:grid;gap:16px;grid-template-columns:1fr}
+@media (min-width:980px){ main{grid-template-columns:1.05fr .95fr} .full{grid-column:1/-1} }
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:var(--shadow);min-width:0}
+.card h2{font-size:14px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 12px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);flex:1 1 160px;min-width:0}
+select,input[type=number],input[type=text]{font:inherit;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;min-width:0}
+button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:8px 12px}
+button:hover{filter:brightness(1.06)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg);font-weight:600}
+button.small{padding:4px 8px;font-size:13px}
+button.ghost{background:transparent}
+.driverchip{display:inline-flex;align-items:center;gap:8px;font-weight:600;margin-top:12px;font-size:14px}
+.driverchip i{width:10px;height:22px;border-radius:2px;display:inline-block}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+/* setup sliders */
+.param{display:grid;grid-template-columns:130px 1fr 92px;gap:10px;align-items:center;padding:6px 0}
+.param .name{font-weight:600;font-size:14px}
+.param .val{font-variant-numeric:tabular-nums;text-align:right;font-weight:600}
+input[type=range]{width:100%;accent-color:var(--accent)}
+@media (max-width:520px){ .param{grid-template-columns:1fr 84px} .param input[type=range]{grid-column:1/-1;grid-row:2} }
+/* feedback grid */
+.fbgrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:8px}
+.fbcell{display:flex;flex-direction:column;gap:4px}
+.fbcell span{font-size:12px;color:var(--muted);text-align:center}
+.fbbtn{height:36px;font-weight:600;font-size:13px;padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fb-unknown{color:var(--muted)}
+.fb-optimal{background:color-mix(in srgb,var(--opt) 20%,transparent);border-color:var(--opt);color:var(--opt)}
+.fb-great{background:color-mix(in srgb,var(--great) 18%,transparent);border-color:var(--great);color:var(--great)}
+.fb-good{background:color-mix(in srgb,var(--ok) 16%,transparent);border-color:var(--ok);color:var(--ok)}
+.fb-bad,.fb-badhigh,.fb-badlow{background:color-mix(in srgb,var(--bad) 16%,transparent);border-color:var(--bad);color:var(--bad)}
+@media (max-width:520px){ .fbgrid{grid-template-columns:repeat(2,minmax(0,1fr))} }
+/* bars */
+.bar{position:relative;height:22px;background:var(--panel2);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.bar .feas{position:absolute;top:0;bottom:0;min-width:3px;background:var(--feas)}
+.bar .mk{position:absolute;top:-1px;bottom:-1px;width:3px;margin-left:-1.5px;border-radius:2px}
+.bar .mk.cur{background:var(--text)}
+.bar .mk.rec{background:var(--accent)}
+.barrow{display:grid;grid-template-columns:96px 1fr 120px;gap:10px;align-items:center;padding:5px 0}
+.barrow .lbl{font-weight:600;font-size:14px}
+.barrow .st{font-size:12px;text-align:right;font-variant-numeric:tabular-nums}
+@media (max-width:520px){ .barrow{grid-template-columns:80px 1fr} .barrow .st{grid-column:1/-1;text-align:left} }
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:8px}
+.legend b{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:5px}
+/* recommendation */
+.rec{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.rec > div{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center;min-width:0}
+.rec .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.rec .v{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px}
+.rec .d{font-size:12px;color:var(--muted)}
+@media (max-width:620px){ .rec{grid-template-columns:repeat(2,minmax(0,1fr))} }
+.status{margin:12px 0 0;padding:10px 12px;border-radius:8px;background:var(--panel2);border:1px solid var(--line);font-size:14px}
+.status.warn{border-color:var(--bad);color:var(--bad)}
+.status.good{border-color:var(--opt)}
+/* history */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:6px 6px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{color:var(--muted);font-weight:600;font-size:12px}
+.tablewrap{overflow-x:auto}
+.pill{display:inline-block;padding:1px 6px;border-radius:5px;font-weight:600;font-size:12px;border:1px solid transparent}
+footer{max-width:1180px;margin:0 auto;padding:8px 16px 32px;color:var(--muted);font-size:12px}
+.sr{position:absolute;left:-9999px}
+</style>
+</head>
+<body>
+<header>
+  <div class="stripe"></div>
+  <h1>F1M Setup Calculator</h1>
+  <div class="sp"></div>
+  <button class="small ghost" id="themeBtn" title="Toggle light / dark">Theme</button>
+</header>
+
+<main>
+  <!-- SESSION -->
+  <section class="card full">
+    <h2>Session</h2>
+    <div class="row">
+      <label class="f">Season
+        <select id="year"></select>
+      </label>
+      <label class="f" style="flex-basis:220px">Grand Prix
+        <select id="track"></select>
+      </label>
+      <label class="f" style="flex-basis:220px">Driver
+        <select id="driver"></select>
+      </label>
+      <label class="f" id="customWrap" style="display:none">Custom driver name
+        <input type="text" id="customName" maxlength="40" placeholder="e.g. My Rookie">
+      </label>
+    </div>
+    <div class="driverchip" id="chip"></div>
+    <div class="small muted" id="trackNote" style="margin-top:6px"></div>
+  </section>
+
+  <!-- CURRENT SETUP + FEEDBACK -->
+  <section class="card">
+    <h2>1 · Setup you ran</h2>
+    <div id="params"></div>
+    <div class="row" style="margin-top:6px">
+      <button class="small" id="useRec">Load recommended</button>
+      <button class="small" id="usePreset">Load track starting point</button>
+    </div>
+
+    <h2 style="margin-top:20px">2 · Driver feedback from that run</h2>
+    <div class="small muted">Tap to cycle: — → Optimal → Great → Good → Bad → Bad (too high) → Bad (too low). Leave “—” if unknown.</div>
+    <div class="fbgrid" id="fbgrid"></div>
+    <div class="row" style="margin-top:12px">
+      <button class="primary" id="addRun">Add practice run</button>
+      <button id="resetFb">Clear feedback</button>
+    </div>
+  </section>
+
+  <!-- RESULT -->
+  <section class="card">
+    <h2>3 · Recommended next setup</h2>
+    <div class="rec" id="rec"></div>
+    <div class="status" id="status">Add feedback from a practice run to start narrowing the setup.</div>
+
+    <h2 style="margin-top:20px">Where the ideal can still be</h2>
+    <div id="bars"></div>
+    <div class="legend">
+      <span><b style="background:var(--feas)"></b>Possible ideal</span>
+      <span><b style="background:var(--text)"></b>Setup you ran</span>
+      <span><b style="background:var(--accent)"></b>Recommended</span>
+    </div>
+  </section>
+
+  <!-- HISTORY -->
+  <section class="card full">
+    <h2>Practice runs · <span id="histTitle"></span></h2>
+    <div class="tablewrap"><table id="hist"></table></div>
+    <div class="row" style="margin-top:12px">
+      <button class="small" id="undo">Remove last run</button>
+      <button class="small" id="clearAll">Clear this session</button>
+      <span class="sp" style="flex:1"></span>
+      <button class="small" id="exportBtn">Export all data</button>
+      <button class="small" id="importBtn">Import</button>
+      <input type="file" id="importFile" accept="application/json" class="sr">
+    </div>
+  </section>
+</main>
+
+<footer>
+  Works offline: everything runs in your browser and saves on this device. Fan-made tool, not affiliated with Frontier, Formula 1 or any team.
+  Feedback bands used: Optimal &lt; 0.007, Great &lt; 0.04, Good &lt; 0.10, Bad ≥ 0.10 away from the ideal.
+</footer>
+
+<script>
+"use strict";
+/* ---------------- Game model (F1 Manager 2024) ----------------
+   Each setup parameter is normalised to 0..1. Each feedback stat is a
+   linear function of the five normalised parameters plus an offset.
+   The driver's hidden "ideal" is a point in feedback space; feedback
+   bands tell how far the run's value was from it.                    */
+const PARAMS = [
+  {key:"fw",  name:"Front Wing",  min:0,   max:10,  step:0.5,  fmt:v=>v.toFixed(1)},
+  {key:"rw",  name:"Rear Wing",   min:9,   max:16,  step:0.5,  fmt:v=>v.toFixed(1)},
+  {key:"arb", name:"Anti-Roll",   min:1,   max:9,   step:1,    fmt:v=>`${10-v}:${v}`},
+  {key:"cam", name:"Tyre Camber", min:2.7, max:3.5, step:0.05, fmt:v=>`-${v.toFixed(2)}°`},
+  {key:"toe", name:"Toe-Out",     min:0,   max:1,   step:0.05, fmt:v=>`${v.toFixed(2)}°`},
+];
+const STATS = [
+  {name:"Oversteer", offset:0.50, w:[ 0.40,-0.40,-0.10, 0.10, 0.00]},
+  {name:"Braking",   offset:0.45, w:[-0.20, 0.20, 0.15,-0.25, 0.20]},
+  {name:"Cornering", offset:0.20, w:[ 0.30, 0.25,-0.15, 0.25,-0.05]},
+  {name:"Traction",  offset:0.25, w:[-0.15, 0.25, 0.50,-0.10, 0.00]},
+  {name:"Straights", offset:1.00, w:[-0.10,-0.90, 0.00, 0.00, 0.00]},
+];
+const BAND = {opt:0.007, great:0.04, good:0.10};
+const FB = ["unknown","optimal","great","good","bad","badhigh","badlow"];
+const FB_LABEL = {unknown:"—",optimal:"Optimal",great:"Great",good:"Good",bad:"Bad",badhigh:"Bad ↑ high",badlow:"Bad ↓ low"};
+
+PARAMS.forEach(p=>p.n = Math.round((p.max-p.min)/p.step)); // number of steps
+const toNorm = (i,v)=> (v-PARAMS[i].min)/(PARAMS[i].max-PARAMS[i].min);
+const fromNorm = (i,x)=> PARAMS[i].min + Math.round(x*PARAMS[i].n)*PARAMS[i].step;
+const snapIdx = (i,x)=> Math.max(0,Math.min(PARAMS[i].n,Math.round(x*PARAMS[i].n)));
+const effects = s => STATS.map(st=>st.offset + st.w.reduce((a,w,i)=>a+w*s[i],0));
+
+/* inverse of the 5x5 weight matrix -> setup from desired feedback */
+const INV = (()=>{
+  const n=5, A=STATS.map((s,r)=>[...s.w, ...Array.from({length:n},(_,c)=>r===c?1:0)]);
+  for(let c=0;c<n;c++){
+    let p=c; for(let r=c+1;r<n;r++) if(Math.abs(A[r][c])>Math.abs(A[p][c])) p=r;
+    [A[c],A[p]]=[A[p],A[c]];
+    const d=A[c][c]; for(let k=0;k<2*n;k++) A[c][k]/=d;
+    for(let r=0;r<n;r++) if(r!==c){const f=A[r][c]; for(let k=0;k<2*n;k++) A[r][k]-=f*A[c][k];}
+  }
+  return A.map(r=>r.slice(n));
+})();
+const setupFromEffects = e => INV.map(row=>row.reduce((a,v,k)=>a+v*(e[k]-STATS[k].offset),0));
+
+/* ---------------- Tracks ----------------
+   ideal: typical ideal feedback window per stat (from game data, where known).
+   Used only to propose a starting setup; the solver itself relies on your feedback. */
+const TRACKS = {
+  BH:{gp:"Bahrain",        circuit:"Sakhir",              ideal:[[.57,.61],[.33,.40],[.50,.57],[.35,.41],[.64,.70]]},
+  SA:{gp:"Saudi Arabia",   circuit:"Jeddah",              ideal:[[.72,.79],[.08,.14],[.73,.76],[.10,.20],[.61,.74]]},
+  AU:{gp:"Australia",      circuit:"Albert Park",         ideal:[[.60,.65],[.39,.46],[.60,.70],[.31,.39],[.41,.45]]},
+  JP:{gp:"Japan",          circuit:"Suzuka",              ideal:[[.58,.62],[.20,.25],[.63,.72],[.38,.51],[.33,.47]]},
+  CN:{gp:"China",          circuit:"Shanghai",            ideal:null},
+  MIA:{gp:"Miami",         circuit:"Miami Intl. Autodrome",ideal:[[.53,.60],[.26,.46],[.66,.76],[.50,.69],[.34,.43]]},
+  EMI:{gp:"Emilia-Romagna",circuit:"Imola",               ideal:[[.56,.61],[.22,.30],[.67,.74],[.38,.56],[.42,.50]]},
+  MC:{gp:"Monaco",         circuit:"Monte Carlo",         ideal:[[.54,.60],[.28,.52],[.78,.98],[.25,.38],[0,.01]]},
+  ES:{gp:"Spain",          circuit:"Barcelona-Catalunya", ideal:[[.52,.65],[.40,.48],[.68,.82],[.28,.40],[.19,.30]]},
+  MAD:{gp:"Spain (Madrid)",circuit:"Madring",             ideal:null},
+  CA:{gp:"Canada",         circuit:"Montréal",            ideal:[[.40,.50],[.55,.65],[.37,.41],[.59,.74],[.59,.64]]},
+  AT:{gp:"Austria",        circuit:"Red Bull Ring",       ideal:[[.38,.43],[.55,.69],[.41,.52],[.72,.79],[.37,.45]]},
+  GB:{gp:"Great Britain",  circuit:"Silverstone",         ideal:[[.63,.69],[.26,.36],[.55,.68],[.15,.24],[.56,.69]]},
+  BE:{gp:"Belgium",        circuit:"Spa-Francorchamps",   ideal:[[.56,.64],[.35,.47],[.37,.45],[.42,.52],[.83,.97]]},
+  HU:{gp:"Hungary",        circuit:"Hungaroring",         ideal:[[.49,.51],[.52,.62],[.60,.75],[.68,.75],[.07,.21]]},
+  NL:{gp:"Netherlands",    circuit:"Zandvoort",           ideal:[[.64,.67],[.39,.53],[.65,.79],[.32,.47],[.26,.40]]},
+  IT:{gp:"Italy",          circuit:"Monza",               ideal:[[.45,.53],[.61,.68],[.12,.19],[.64,.70],[.98,1]]},
+  AZ:{gp:"Azerbaijan",     circuit:"Baku",                ideal:[[.43,.46],[.65,.70],[.21,.24],[.61,.67],[.79,.86]]},
+  SG:{gp:"Singapore",      circuit:"Marina Bay",          ideal:[[.38,.49],[.65,.75],[.58,.66],[.35,.53],[.07,.14]]},
+  US:{gp:"United States",  circuit:"Circuit of the Americas",ideal:[[.58,.62],[.28,.44],[.62,.75],[.57,.69],[.33,.47]]},
+  MX:{gp:"Mexico City",    circuit:"Hermanos Rodríguez",  ideal:[[.50,.57],[.34,.46],[.61,.69],[.59,.71],[.36,.49]]},
+  BR:{gp:"São Paulo",      circuit:"Interlagos",          ideal:[[.52,.58],[.39,.49],[.54,.67],[.56,.71],[.42,.50]]},
+  LV:{gp:"Las Vegas",      circuit:"Las Vegas Strip",     ideal:null},
+  QA:{gp:"Qatar",          circuit:"Lusail",              ideal:null},
+  AE:{gp:"Abu Dhabi",      circuit:"Yas Marina",          ideal:[[.45,.53],[.49,.62],[.48,.62],[.47,.69],[.44,.56]]},
+};
+
+const CALENDARS = {
+  2024:["BH","SA","AU","JP","CN","MIA","EMI","MC","CA","ES","AT","GB","HU","BE","NL","IT","AZ","SG","US","MX","BR","LV","QA","AE"],
+  2025:["AU","CN","JP","BH","SA","MIA","EMI","MC","ES","CA","AT","GB","BE","HU","NL","IT","AZ","SG","US","MX","BR","LV","QA","AE"],
+  // 2026: Bahrain & Saudi Arabia were cancelled (22 rounds). Kept at the end, marked, in case you still want to label them.
+  2026:["AU","CN","JP","MIA","CA","MC","ES","AT","GB","BE","HU","NL","IT","MAD","AZ","SG","US","MX","BR","LV","QA","AE"],
+};
+const CANCELLED = {2026:["BH","SA"]};
+
+const TEAMS = {
+  RBR:{name:"Red Bull",color:"#3671C6"}, MCL:{name:"McLaren",color:"#FF8000"}, FER:{name:"Ferrari",color:"#E8002D"},
+  MER:{name:"Mercedes",color:"#27F4D2"}, AMR:{name:"Aston Martin",color:"#229971"}, ALP:{name:"Alpine",color:"#0093CC"},
+  WIL:{name:"Williams",color:"#64C4FF"}, RB:{name:"RB",color:"#6692FF"}, VCARB:{name:"Racing Bulls",color:"#6692FF"},
+  SAU:{name:"Kick Sauber",color:"#52E252"}, AUDI:{name:"Audi",color:"#BB0A30"}, HAAS:{name:"Haas",color:"#B6BABD"},
+  CAD:{name:"Cadillac",color:"#C8A45A"},
+};
+const DRIVERS = {
+  2024:[["Max Verstappen","RBR"],["Sergio Pérez","RBR"],["Lando Norris","MCL"],["Oscar Piastri","MCL"],
+        ["Charles Leclerc","FER"],["Carlos Sainz","FER"],["Oliver Bearman","FER"],["Lewis Hamilton","MER"],["George Russell","MER"],
+        ["Fernando Alonso","AMR"],["Lance Stroll","AMR"],["Pierre Gasly","ALP"],["Esteban Ocon","ALP"],["Jack Doohan","ALP"],
+        ["Alexander Albon","WIL"],["Logan Sargeant","WIL"],["Franco Colapinto","WIL"],
+        ["Yuki Tsunoda","RB"],["Daniel Ricciardo","RB"],["Liam Lawson","RB"],
+        ["Valtteri Bottas","SAU"],["Zhou Guanyu","SAU"],["Nico Hülkenberg","HAAS"],["Kevin Magnussen","HAAS"]],
+  2025:[["Max Verstappen","RBR"],["Yuki Tsunoda","RBR"],["Lando Norris","MCL"],["Oscar Piastri","MCL"],
+        ["Charles Leclerc","FER"],["Lewis Hamilton","FER"],["George Russell","MER"],["Kimi Antonelli","MER"],
+        ["Fernando Alonso","AMR"],["Lance Stroll","AMR"],["Pierre Gasly","ALP"],["Franco Colapinto","ALP"],["Jack Doohan","ALP"],
+        ["Alexander Albon","WIL"],["Carlos Sainz","WIL"],["Liam Lawson","VCARB"],["Isack Hadjar","VCARB"],
+        ["Nico Hülkenberg","SAU"],["Gabriel Bortoleto","SAU"],["Esteban Ocon","HAAS"],["Oliver Bearman","HAAS"]],
+  2026:[["Max Verstappen","RBR"],["Isack Hadjar","RBR"],["Lando Norris","MCL"],["Oscar Piastri","MCL"],
+        ["Charles Leclerc","FER"],["Lewis Hamilton","FER"],["George Russell","MER"],["Kimi Antonelli","MER"],
+        ["Fernando Alonso","AMR"],["Lance Stroll","AMR"],["Pierre Gasly","ALP"],["Franco Colapinto","ALP"],
+        ["Alexander Albon","WIL"],["Carlos Sainz","WIL"],["Liam Lawson","VCARB"],["Arvid Lindblad","VCARB"],
+        ["Nico Hülkenberg","AUDI"],["Gabriel Bortoleto","AUDI"],["Esteban Ocon","HAAS"],["Oliver Bearman","HAAS"],
+        ["Sergio Pérez","CAD"],["Valtteri Bottas","CAD"]],
+};
+
+/* ---------------- Storage ---------------- */
+const LS_KEY = "f1m-setup-calc-v1";
+let DB = {ui:{}, sessions:{}};
+try { const raw = localStorage.getItem(LS_KEY); if(raw) DB = Object.assign(DB, JSON.parse(raw)); } catch(e){}
+const save = ()=>{ try{ localStorage.setItem(LS_KEY, JSON.stringify(DB)); }catch(e){} };
+
+/* ---------------- Solver ---------------- */
+function clampIv(list){ return list.map(([a,b])=>[Math.max(0,a),Math.min(1,b)]).filter(([a,b])=>b-a>1e-9); }
+function allowed(fb, v){
+  const o=BAND.opt, g=BAND.great, d=BAND.good, e=1e-4; // small tolerance for rounding
+  switch(fb){
+    case "optimal": return clampIv([[v-o-e,v+o+e]]);
+    case "great":   return clampIv([[v-g-e,v-o+e],[v+o-e,v+g+e]]);
+    case "good":    return clampIv([[v-d-e,v-g+e],[v+g-e,v+d+e]]);
+    case "bad":     return clampIv([[0,v-d+e],[v+d-e,1]]);
+    case "badhigh": return clampIv([[0,v-d+e]]);   // value was too high -> ideal is lower
+    case "badlow":  return clampIv([[v+d-e,1]]);   // value was too low  -> ideal is higher
+    default:        return [[0,1]];
+  }
+}
+function intersect(A,B){
+  const out=[];
+  for(const [a1,b1] of A) for(const [a2,b2] of B){ const a=Math.max(a1,a2), b=Math.min(b1,b2); if(b-a>1e-9) out.push([a,b]); }
+  out.sort((x,y)=>x[0]-y[0]);
+  const m=[]; for(const iv of out){ if(m.length && iv[0]<=m[m.length-1][1]+1e-9) m[m.length-1][1]=Math.max(m[m.length-1][1],iv[1]); else m.push(iv.slice()); }
+  return m;
+}
+function feasibleRegions(runs){
+  const F = STATS.map(()=>[[0,1]]);
+  for(const r of runs){
+    const e = effects(r.s);
+    for(let k=0;k<5;k++) if(r.fb[k] && r.fb[k]!=="unknown") F[k] = intersect(F[k], allowed(r.fb[k], e[k]));
+  }
+  return F;
+}
+/* For each stat, treat the ideal as uniformly spread over what is still possible.
+   Aim at the mean of that region (weighted by how precisely it is known), then
+   brute-force every legal in-game setup (~1M combos) for the best fit.
+   Setups already tried are skipped so every run teaches something new. */
+function solve(runs, startNorm){
+  const F = feasibleRegions(runs);
+  const known = F.map(iv=>!(iv.length===1 && iv[0][0]<=1e-9 && iv[0][1]>=1-1e-9));
+  const empty = F.map(iv=>iv.length===0);
+  const tgt=[], wgt=[], lo=[], hi=[];
+  const startE = effects(startNorm);
+  for(let k=0;k<5;k++){
+    if(empty[k] || !known[k]){
+      tgt[k]=startE[k]; wgt[k]=1/(0.25*0.25); lo[k]=-1; hi[k]=2; continue;
+    }
+    let L=0, m1=0, m2=0;
+    for(const [a,b] of F[k]){ const w=b-a; L+=w; m1+=w*(a+b)/2; m2+=(b*b*b-a*a*a)/3; }
+    const mean=m1/L, vari=Math.max(m2/L-mean*mean, 0.003*0.003);
+    tgt[k]=mean; wgt[k]=1/vari; lo[k]=F[k][0][0]; hi[k]=F[k][F[k].length-1][1];
+  }
+  const n=PARAMS.map(p=>p.n);
+  const tried = new Set(runs.map(r=>r.s.map((x,i)=>Math.round(x*n[i])).join(",")));
+  const contrib = PARAMS.map((p,i)=>Array.from({length:p.n+1},(_,j)=>STATS.map(st=>st.w[i]*j/p.n)));
+  const off = STATS.map(s=>s.offset);
+  let bestCost=Infinity, bestIdx=null;
+  for(let a=0;a<=n[0];a++){ const ca=contrib[0][a];
+   for(let b=0;b<=n[1];b++){ const cb=contrib[1][b];
+    for(let c=0;c<=n[2];c++){ const cc=contrib[2][c];
+     for(let d=0;d<=n[3];d++){ const cd=contrib[3][d];
+      for(let f=0;f<=n[4];f++){ const cf=contrib[4][f];
+        let cost=0;
+        for(let k=0;k<5;k++){
+          const v=off[k]+ca[k]+cb[k]+cc[k]+cd[k]+cf[k];
+          const dv=v-tgt[k]; cost+=wgt[k]*dv*dv;
+          if(v<lo[k]) cost+=100*wgt[k]*(lo[k]-v)*(lo[k]-v); else if(v>hi[k]) cost+=100*wgt[k]*(v-hi[k])*(v-hi[k]);
+          if(cost>=bestCost) break;
+        }
+        if(cost<bestCost && !tried.has(a+","+b+","+c+","+d+","+f)){ bestCost=cost; bestIdx=[a,b,c,d,f]; }
+  }}}}}
+  if(!bestIdx) bestIdx = startNorm.map((x,i)=>Math.round(x*n[i]));
+  const recNorm = bestIdx.map((j,i)=>j/n[i]);
+  return {F, known, empty, recNorm, recE:effects(recNorm), tgt};
+}
+
+/* ---------------- UI state ---------------- */
+const $ = id => document.getElementById(id);
+let cur = {year:null, track:null, driver:null};
+let fbDraft = ["unknown","unknown","unknown","unknown","unknown"];
+let lastSolve = null;
+
+function sessionKey(){ return `${cur.year}|${cur.track}|${cur.driver}`; }
+function session(){
+  const k=sessionKey();
+  if(!DB.sessions[k]) DB.sessions[k] = {setup:presetNorm(cur.track), runs:[]};
+  return DB.sessions[k];
+}
+function presetNorm(code){
+  const t=TRACKS[code];
+  if(!t || !t.ideal) return [0.5,0.5,0.5,0.5,0.5];
+  const mid=t.ideal.map(([a,b])=>(a+b)/2);
+  return setupFromEffects(mid).map((x,i)=>snapIdx(i,Math.max(0,Math.min(1,x)))/PARAMS[i].n);
+}
+function driverName(){
+  if(cur.driver==="__custom") return ($("customName").value.trim()||"Custom driver");
+  return cur.driver;
+}
+
+function fillYear(){
+  const ys=Object.keys(CALENDARS);
+  $("year").innerHTML = ys.map(y=>`<option value="${y}">${y}${y==="2024"?" (in-game)":""}</option>`).join("");
+  cur.year = DB.ui.year && CALENDARS[DB.ui.year] ? DB.ui.year : "2025";
+  $("year").value = cur.year;
+}
+function fillTrack(){
+  const cal=CALENDARS[cur.year], canc=CANCELLED[cur.year]||[];
+  let html = cal.map((c,i)=>`<option value="${c}">R${i+1} · ${TRACKS[c].gp} — ${TRACKS[c].circuit}</option>`).join("");
+  if(canc.length) html += `<optgroup label="Cancelled">`+canc.map(c=>`<option value="${c}">${TRACKS[c].gp} — ${TRACKS[c].circuit} (cancelled)</option>`).join("")+`</optgroup>`;
+  $("track").innerHTML = html;
+  const want = DB.ui.track;
+  cur.track = (want && (cal.includes(want)||canc.includes(want))) ? want : cal[0];
+  $("track").value = cur.track;
+}
+function fillDriver(){
+  const ds=DRIVERS[cur.year];
+  $("driver").innerHTML = ds.map(([n,t])=>`<option value="${n}">${n} · ${TEAMS[t].name}</option>`).join("") + `<option value="__custom">Custom…</option>`;
+  const want = DB.ui.driver;
+  cur.driver = (want==="__custom" || ds.some(d=>d[0]===want)) ? want : ds[0][0];
+  $("driver").value = cur.driver;
+  $("customWrap").style.display = cur.driver==="__custom" ? "" : "none";
+  $("customName").value = DB.ui.customName||"";
+}
+function renderChip(){
+  const d = DRIVERS[cur.year].find(x=>x[0]===cur.driver);
+  const team = d ? TEAMS[d[1]] : {name:"Custom",color:"var(--muted)"};
+  $("chip").innerHTML = `<i style="background:${team.color}"></i>${esc(driverName())} <span class="muted" style="font-weight:400">· ${team.name} · ${cur.year} ${esc(TRACKS[cur.track].gp)} GP</span>`;
+  const t=TRACKS[cur.track];
+  const notes=[];
+  if((CANCELLED[cur.year]||[]).includes(cur.track)) notes.push("This race was cancelled in "+cur.year+".");
+  if(!t.ideal) notes.push("No game data for this circuit yet, so the starting point is neutral — the solver still works from your feedback.");
+  if(cur.year==="2026") notes.push("F1 Manager 2024 uses its own grid and cars; season/driver here is a label for your save.");
+  $("trackNote").textContent = notes.join(" ");
+  $("histTitle").textContent = `${driverName()} · ${t.gp} ${cur.year}`;
+}
+function esc(s){ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+function renderParams(){
+  const s=session().setup;
+  $("params").innerHTML = PARAMS.map((p,i)=>{
+    const v=fromNorm(i,s[i]);
+    return `<div class="param"><div class="name">${p.name}</div>
+      <input type="range" min="0" max="${p.n}" step="1" value="${snapIdx(i,s[i])}" data-i="${i}" aria-label="${p.name}">
+      <div class="val" id="pv${i}">${p.fmt(v)}</div></div>`;
+  }).join("");
+  $("params").querySelectorAll("input[type=range]").forEach(el=>{
+    el.addEventListener("input",()=>{
+      const i=+el.dataset.i; session().setup[i]=(+el.value)/PARAMS[i].n;
+      $("pv"+i).textContent = PARAMS[i].fmt(fromNorm(i,session().setup[i]));
+      save(); renderBars();
+    });
+  });
+}
+function renderFb(){
+  $("fbgrid").innerHTML = STATS.map((st,k)=>`<div class="fbcell"><span>${st.name}</span>
+    <button class="fbbtn fb-${fbDraft[k]}" data-k="${k}" title="Click to cycle, right-click to go back">${FB_LABEL[fbDraft[k]]}</button></div>`).join("");
+  $("fbgrid").querySelectorAll("button").forEach(b=>{
+    const step=dir=>{ const k=+b.dataset.k; fbDraft[k]=FB[(FB.indexOf(fbDraft[k])+dir+FB.length)%FB.length]; renderFb(); };
+    b.addEventListener("click",()=>step(1));
+    b.addEventListener("contextmenu",ev=>{ev.preventDefault(); step(-1);});
+  });
+}
+function runSolve(){
+  const ses=session();
+  const start = ses.runs.length ? ses.runs[ses.runs.length-1].s : presetNorm(cur.track);
+  lastSolve = solve(ses.runs, start);
+  renderRec(); renderBars();
+}
+function renderRec(){
+  const r=lastSolve, ses=session();
+  $("rec").innerHTML = PARAMS.map((p,i)=>{
+    const ref = ses.runs.length ? ses.runs[ses.runs.length-1].s : ses.setup;
+    const v=fromNorm(i,r.recNorm[i]), now=fromNorm(i,ref[i]);
+    const diff = Math.round((v-now)/p.step);
+    const dtxt = (diff===0 ? "same" : (diff>0?"+":"−")+Math.abs(diff)+" click"+(Math.abs(diff)>1?"s":"")) + (ses.runs.length?" vs last run":"");
+    return `<div><div class="k">${p.name}</div><div class="v">${p.fmt(v)}</div><div class="d">${dtxt}</div></div>`;
+  }).join("");
+  const st=$("status"); st.className="status";
+  if(r.empty.some(x=>x)){
+    const bad=STATS.filter((_,k)=>r.empty[k]).map(s=>s.name).join(", ");
+    st.className="status warn";
+    st.textContent=`Your feedback contradicts itself for ${bad}. Check the last runs (wrong setup value or feedback entered?) and remove the bad one.`;
+    return;
+  }
+  if(!ses.runs.length){ st.textContent = "This is the track starting point. Run it in practice, enter the feedback, and press “Add practice run”."; return; }
+  const widths = r.F.map(iv=>iv.reduce((a,[x,y])=>a+(y-x),0));
+  const nailed = widths.filter(w=>w<=2*BAND.opt+0.003).length;
+  const unknown = r.known.filter(x=>!x).length;
+  const inside = r.recE.map((v,k)=>r.F[k].some(([a,b])=>v>=a-1e-6&&v<=b+1e-6));
+  if(nailed===5 && inside.every(x=>x)){ st.className="status good"; st.textContent="All five stats are pinned down — this setup should give Optimal (or as close as the in-game steps allow) across the board."; return; }
+  st.textContent = `${ses.runs.length} run${ses.runs.length>1?"s":""} logged · ${nailed}/5 stats pinned down`+(unknown?` · ${unknown} with no feedback yet`:"")+`. Try the recommended setup next.`;
+}
+function renderBars(){
+  if(!lastSolve) return;
+  const r=lastSolve, curE=effects(session().setup);
+  $("bars").innerHTML = STATS.map((st,k)=>{
+    const feas = r.F[k].map(([a,b])=>`<div class="feas" style="left:${a*100}%;width:${(b-a)*100}%"></div>`).join("");
+    const c=Math.max(0,Math.min(1,curE[k])), rc=Math.max(0,Math.min(1,r.recE[k]));
+    const w = r.F[k].reduce((a,[x,y])=>a+(y-x),0);
+    const lab = r.empty[k] ? `<span style="color:var(--bad)">conflict</span>` :
+      !r.known[k] ? `<span class="muted">unknown</span>` :
+      `${r.F[k].map(([a,b])=>a.toFixed(3)+"–"+b.toFixed(3)).join(", ")}`;
+    return `<div class="barrow"><div class="lbl">${st.name}</div>
+      <div class="bar" title="width ${w.toFixed(3)}">${feas}<div class="mk cur" style="left:${c*100}%"></div><div class="mk rec" style="left:${rc*100}%"></div></div>
+      <div class="st">${lab}</div></div>`;
+  }).join("");
+}
+function fbPill(fb){
+  const cls = {optimal:"fb-optimal",great:"fb-great",good:"fb-good",bad:"fb-bad",badhigh:"fb-bad",badlow:"fb-bad"}[fb]||"fb-unknown";
+  return `<td><span class="pill ${cls}">${FB_LABEL[fb]||"—"}</span></td>`;
+}
+function renderHist(){
+  const runs=session().runs;
+  if(!runs.length){ $("hist").innerHTML = `<tr><td class="muted">No runs yet for this driver at this track.</td></tr>`; return; }
+  $("hist").innerHTML = `<tr><th>#</th>${PARAMS.map(p=>`<th>${p.name}</th>`).join("")}${STATS.map(s=>`<th>${s.name}</th>`).join("")}</tr>` +
+    runs.map((r,n)=>`<tr><td>${n+1}</td>${PARAMS.map((p,i)=>`<td>${p.fmt(fromNorm(i,r.s[i]))}</td>`).join("")}${r.fb.map(fbPill).join("")}</tr>`).join("");
+}
+function renderAll(){ renderChip(); renderParams(); renderFb(); renderHist(); runSolve(); }
+
+function persistUi(){ DB.ui = {year:cur.year, track:cur.track, driver:cur.driver, customName:$("customName").value, theme:DB.ui.theme}; save(); }
+
+/* ---------------- Events ---------------- */
+$("year").addEventListener("change",()=>{ cur.year=$("year").value; fillTrack(); fillDriver(); persistUi(); renderAll(); });
+$("track").addEventListener("change",()=>{ cur.track=$("track").value; fbDraft.fill("unknown"); persistUi(); renderAll(); });
+$("driver").addEventListener("change",()=>{ cur.driver=$("driver").value; $("customWrap").style.display=cur.driver==="__custom"?"":"none"; fbDraft.fill("unknown"); persistUi(); renderAll(); });
+$("customName").addEventListener("input",()=>{ persistUi(); renderChip(); });
+$("addRun").addEventListener("click",()=>{
+  if(fbDraft.every(f=>f==="unknown")){ $("status").className="status warn"; $("status").textContent="Set at least one feedback before adding the run."; return; }
+  const ses=session();
+  ses.runs.push({s:ses.setup.map((x,i)=>snapIdx(i,x)/PARAMS[i].n), fb:fbDraft.slice(), t:Date.now()});
+  fbDraft.fill("unknown"); runSolve();
+  ses.setup = lastSolve.recNorm.slice();   // move sliders to the next suggestion
+  save(); renderParams(); renderFb(); renderHist(); runSolve();
+});
+$("resetFb").addEventListener("click",()=>{ fbDraft.fill("unknown"); renderFb(); });
+$("useRec").addEventListener("click",()=>{ if(!lastSolve) return; session().setup=lastSolve.recNorm.slice(); save(); renderParams(); renderRec(); renderBars(); });
+$("usePreset").addEventListener("click",()=>{ session().setup=presetNorm(cur.track); save(); renderParams(); renderRec(); renderBars(); });
+$("undo").addEventListener("click",()=>{ session().runs.pop(); save(); renderHist(); runSolve(); });
+$("clearAll").addEventListener("click",()=>{ if(!confirm("Delete all runs for this driver at this track?")) return; delete DB.sessions[sessionKey()]; save(); renderAll(); });
+$("exportBtn").addEventListener("click",()=>{
+  const blob=new Blob([JSON.stringify(DB,null,1)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="f1m-setups.json"; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+});
+$("importBtn").addEventListener("click",()=>$("importFile").click());
+$("importFile").addEventListener("change",async ev=>{
+  const f=ev.target.files[0]; if(!f) return;
+  try{ const d=JSON.parse(await f.text()); if(!d.sessions) throw 0; DB.sessions=Object.assign(DB.sessions,d.sessions); save(); renderAll(); alert("Imported."); }
+  catch(e){ alert("That file doesn't look like an export from this tool."); }
+  ev.target.value="";
+});
+$("themeBtn").addEventListener("click",()=>{
+  const dark = DB.ui.theme ? DB.ui.theme==="dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  DB.ui.theme = dark ? "light" : "dark"; document.documentElement.dataset.theme = DB.ui.theme; save();
+});
+
+/* ---------------- Boot ---------------- */
+if(DB.ui.theme) document.documentElement.dataset.theme = DB.ui.theme;
+fillYear(); fillTrack(); fillDriver(); renderAll();
+if("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>
