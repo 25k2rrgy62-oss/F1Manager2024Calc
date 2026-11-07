@@ -1,5 +1,7 @@
 # F1M Setup Calculator
 
+**Website:** https://25k2rrgy62-oss.github.io/F1Manager2024Calc/ · **iOS app:** see [iOS app](#ios-app)
+
 A car setup solver for **F1 Manager 2024**. It runs entirely in your browser: no server, no account, and no internet needed once loaded. It's built for phones as well as desktop.
 
 ## Features
@@ -57,27 +59,39 @@ Inspired by [f1setup.it](https://f1setup.it).
 
 **Option 1: open the file.** Download this repo (green **Code** button → **Download ZIP**), unzip it, and double-click `index.html`. It works with no internet connection.
 
-**Option 2: install from the website.** Once it's hosted (see below), open the site in Chrome, Edge or Safari and choose **Install app** or **Add to Home Screen**. It keeps working offline after your first visit.
+**Option 2: install from the website.** Open the website in Chrome, Edge or Safari and choose **Install app** or **Add to Home Screen**. It keeps working offline after your first visit.
 
-## Host it for free
+## Website (GitHub Pages)
 
-The app is plain static files, so any static host works.
+`.github/workflows/pages.yml` publishes the site every time something is pushed to `main`.
 
-### GitHub Pages (recommended)
+**One-time setup:** on GitHub, open the repo → **Settings** → **Pages**. Under **Build and deployment**, set **Source** to **GitHub Actions**. Then open the **Actions** tab, choose **Deploy website**, and press **Run workflow**. Pushes after that deploy automatically.
 
-1. On GitHub, open the repo → **Settings** → **Pages**.
-2. Under **Build and deployment**, set **Source** to **Deploy from a branch**. Pick `main` and `/ (root)`, then press **Save**.
-3. After a minute or two, the site is live at `https://<your-username>.github.io/<repo-name>/`.
+The site is then live at **https://25k2rrgy62-oss.github.io/F1Manager2024Calc/**.
 
-Free GitHub Pages needs the repository to be **public**. Every push to `main` redeploys automatically.
+Other free hosts work too, because the site is just static files:
+- **Netlify Drop:** drag the folder onto <https://app.netlify.com/drop>.
+- **Cloudflare Pages:** connect the repo, leave the build command empty, and set the output directory to `/`.
 
-### Netlify Drop
+## iOS app
 
-Go to <https://app.netlify.com/drop> and drag the folder containing `index.html` onto the page. You get a free `*.netlify.app` URL.
+`ios/` contains a native SwiftUI app that bundles the same calculator, so it works fully offline. Alerts, prompts and **Export** use native iOS dialogs and the share sheet.
 
-### Cloudflare Pages
+There are three ways to get it on your iPhone or iPad:
 
-Go to **Workers & Pages** → **Create** → **Pages** and connect this GitHub repo. Leave the build command empty and set the output directory to `/`. You get a free `*.pages.dev` URL that updates on every push.
+1. **Add to Home Screen (free, no Mac).** Open the website in Safari → **Share** → **Add to Home Screen**. It opens full-screen with its own icon and works offline after the first visit.
+2. **Sideload the built app (free, no Mac).** Every push that touches the app runs **Build iOS app** in the **Actions** tab. Open the latest run and download **F1MSetup-unsigned-ipa**. Install it with [AltStore](https://altstore.io) or [Sideloadly](https://sideloadly.io), which sign it with your Apple ID. With a free Apple ID, the app has to be refreshed every 7 days.
+3. **Build it in Xcode (Mac).**
+   ```sh
+   brew install xcodegen
+   cd ios
+   ./sync-web.sh        # copies index.html into the app
+   xcodegen generate    # creates F1MSetup.xcodeproj
+   open F1MSetup.xcodeproj
+   ```
+   In Xcode, select the **F1MSetup** target → **Signing & Capabilities**. Choose your Team and change the bundle identifier (`io.github.f1msetup.app`) to something unique. Then plug in your phone and press **Run**. Publishing on the App Store or TestFlight needs a paid Apple Developer account ($99/year).
+
+The app always uses the root `index.html`. Every build copies it in, so updating the website also updates the app on its next build.
 
 ## Files
 
@@ -87,6 +101,10 @@ Go to **Workers & Pages** → **Create** → **Pages** and connect this GitHub r
 | `sw.js` | Service worker for offline use when hosted |
 | `manifest.webmanifest`, `icon.svg` | Makes it installable as an app |
 | `.nojekyll` | Tells GitHub Pages to serve the files as-is |
+| `apple-touch-icon.png` | Home-screen icon on iPhone and iPad |
+| `.github/workflows/pages.yml` | Deploys the website to GitHub Pages |
+| `.github/workflows/ios.yml` | Builds the iOS app and uploads an unsigned `.ipa` |
+| `ios/` | iOS app: `project.yml` (XcodeGen), Swift source, app icon, `sync-web.sh` |
 | `LICENSE` | MIT License |
 
 ## License
