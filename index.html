@@ -71,8 +71,6 @@ header .sp{flex:1}
 .base .vals{display:flex;flex-wrap:wrap;gap:6px 14px;font-weight:700}
 .base .vals small{display:block;font-weight:400;font-size:11px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
 .base .sp{flex:1}
-.check{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);min-height:40px}
-.check input{width:16px;height:16px;accent-color:var(--accent)}
 
 .grid{display:grid;gap:16px;grid-template-columns:1fr}
 @media (min-width:920px){.grid{grid-template-columns:1fr 1fr}}
@@ -190,7 +188,6 @@ footer a{color:inherit}
     <label class="field" id="nameWrap">Custom name
       <input id="carName" type="text" maxlength="24" autocomplete="off" placeholder="Name this slot">
     </label>
-    <label class="check" id="winWrap"><input type="checkbox" id="useWin"> <span id="winLabel">Start from this track's usual range</span></label>
     <div class="sp"></div>
     <button class="btn quiet" id="removeCar" type="button">Remove slot</button>
   </div>
@@ -275,8 +272,9 @@ const SLACK = 0.0015;              // tolerance for the game's rounding
 const FB = [["o","Optimal"],["g","Great"],["d","Good"],["b","Bad"]];
 const FBNAME = {o:"Optimal",g:"Great",d:"Good",b:"Bad"};
 
-/* 2024 calendar. win = usual range of driver ideals at that track, per area.
-   base = starting setup (0..1) for tracks with no range data. */
+/* 2024 calendar. win and base are used only to build each track's base setup
+   (win = typical values per area, base = a fixed starting setup, 0..1).
+   The solver itself starts from every possible setup. */
 const TRACKS = [
   {id:"BH", name:"Bahrain",        place:"Sakhir",        win:[[.57,.61],[.33,.40],[.50,.57],[.35,.41],[.64,.70]]},
   {id:"SA", name:"Saudi Arabia",   place:"Jeddah",        win:[[.72,.79],[.08,.14],[.73,.76],[.10,.20],[.61,.74]]},
@@ -319,7 +317,6 @@ const TEAMS = [
 const DRIVER_TEAM = {};
 TEAMS.forEach(([team,color,ds])=>ds.forEach(d=>DRIVER_TEAM[d]={team,color}));
 const TRACK = Object.fromEntries(TRACKS.map(t=>[t.id,t]));
-const WIN_PAD = 0.01;
 
 /* ============ Solver ============ */
 const effects = s => STATS.map(st=>st.base + st.w.reduce((a,w,i)=>a + w*s[i]/PARAMS[i].steps,0));
@@ -338,21 +335,17 @@ function allowed(v,f){
   const [n,x]=EDGE[f], near=Math.max(0,n-SLACK), far=x+SLACK;
   return near===0 ? [[v-far,v+far]] : [[v-far,v-near],[v+near,v+far]];
 }
-/* remaining range of the ideal for one area */
-function feasible(k,runs,win){
+/* remaining range of the ideal for one area. Starts from the full range:
+   only the driver's feedback narrows it. */
+function feasible(k,runs){
   const full=[[0,1]];
   const cons=runs.filter(r=>r.fb[k]).map(r=>allowed(effects(r.s)[k],r.fb[k]));
-  const all=start=>cons.reduce((iv,c)=>intersect(iv,c),start);
-  if(win){
-    const iv=all([[Math.max(0,win[0]-WIN_PAD),Math.min(1,win[1]+WIN_PAD)]]);
-    if(iv.length) return {iv,usedWin:true,conflict:false};
-  }
-  let iv=all(full);
-  if(iv.length) return {iv,usedWin:false,conflict:false,winDropped:!!win};
+  let iv=cons.reduce((iv,c)=>intersect(iv,c),full);
+  if(iv.length) return {iv,conflict:false};
   /* feedback contradicts itself: trust the newest runs first */
   iv=full;
   for(let i=cons.length-1;i>=0;i--){ const t=intersect(iv,cons[i]); if(t.length) iv=t; }
-  return {iv,usedWin:false,conflict:true};
+  return {iv,conflict:true};
 }
 const widest = iv => iv.reduce((a,b)=>(b[1]-b[0]>a[1]-a[0]?b:a));
 const inside = (iv,v) => iv.some(([a,b])=>v>=a-1e-9 && v<=b+1e-9);
@@ -392,8 +385,7 @@ function scan(ivs,skip,keep){
   return {count,top,tgt};
 }
 function solve(slot){
-  const t=TRACK[slot.track];
-  const areas=STATS.map((_,k)=>feasible(k,slot.runs,slot.useWin && t.win ? t.win[k] : null));
+  const areas=STATS.map((_,k)=>feasible(k,slot.runs));
   const res=scan(areas.map(a=>a.iv),slot.runs.map(r=>r.s),6);
   return {areas,...res};
 }
@@ -409,7 +401,7 @@ function computePreset(trackId){
 
 /* ============ State ============ */
 const KEY="f1m24-setup-calc";
-const newSlot=(name,track="BH")=>({name,driver:"",track,useWin:true,setup:preset(track),fb:[null,null,null,null,null],runs:[]});
+const newSlot=(name,track="BH")=>({name,driver:"",track,setup:preset(track),fb:[null,null,null,null,null],runs:[]});
 function load(){
   try{
     const s=JSON.parse(localStorage.getItem(KEY));
@@ -445,9 +437,6 @@ function renderSession(){
   $("carName").value=s.name;
   $("trackSel").innerHTML=TRACKS.map((t,i)=>`<option value="${t.id}">R${i+1} · ${esc(t.name)} — ${esc(t.place)}</option>`).join("");
   $("trackSel").value=s.track;
-  $("useWin").checked=s.useWin && !!t.win;
-  $("useWin").disabled=!t.win;
-  $("winLabel").textContent=t.win ? "Start from this track's usual range" : "No range data for this track";
   $("removeCar").hidden=state.slots.length<2;
 }
 function renderSetup(){
@@ -503,7 +492,6 @@ function updateLive(){
     const range=a.iv.map(([lo,hi])=>`${f3(Math.max(0,lo))}–${f3(Math.min(1,hi))}`).join(" or ");
     $("bn"+k).innerHTML=`<span>Ideal is in ${range}</span>`
       +(a.conflict?`<span class="warn">Feedback doesn't add up — check your runs</span>`
-        :a.winDropped?`<span>Outside the track's usual range</span>`
         :`<span>${inside(a.iv,e[k])?"Setup is inside":"Setup is outside"}</span>`);
   });
 }
@@ -584,7 +572,7 @@ function findSetup(){
   if(s.fb.some(Boolean)){
     s.runs.push({s:s.setup.slice(),fb:s.fb.slice()});
     s.fb=[null,null,null,null,null];
-  }else if(!s.runs.length && !(s.useWin && TRACK[s.track].win)){
+  }else if(!s.runs.length){
     note=`<strong>Enter some feedback first.</strong> <span class="muted">Tap what the driver said for at least one area.</span>`;
   }
   recompute();
@@ -613,7 +601,7 @@ $("trackSel").addEventListener("change",ev=>{
   renderAll();
 });
 function goTrack(slot,id){
-  slot.track=id; slot.runs=[]; slot.fb=[null,null,null,null,null]; slot.useWin=true; slot.setup=preset(id);
+  slot.track=id; slot.runs=[]; slot.fb=[null,null,null,null,null]; slot.setup=preset(id);
 }
 /* next race weekend: every slot on this track moves on together */
 $("nextTrack").addEventListener("click",()=>{
@@ -623,7 +611,6 @@ $("nextTrack").addEventListener("click",()=>{
   group.forEach(s=>goTrack(s,next.id));
   renderAll();
 });
-$("useWin").addEventListener("change",ev=>{ cur().useWin=ev.target.checked; renderAll(); });
 $("removeCar").addEventListener("click",()=>{
   if(state.slots.length<2 || !confirm(`Remove "${slotName(cur(),state.active)}" and its runs?`)) return;
   state.slots.splice(state.active,1);

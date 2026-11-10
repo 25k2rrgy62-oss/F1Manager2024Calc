@@ -27,7 +27,7 @@ The game scales each of the five setup values to 0–1. Each feedback area is a 
 
 Every run narrows the range the ideal can be in (the blue band on each feedback bar). The calculator then checks all 1,012,095 legal setups and suggests the one that sits inside every remaining range and closest to the middle of each.
 
-For 21 of the 24 tracks the search starts from the range driver ideals usually fall in at that track. Shanghai, Las Vegas and Qatar have no range data, so they start from a fixed preset and the full range. If your feedback contradicts a track's usual range, that range is ignored for that area.
+The search always starts from all 1,012,095 setups: nothing is ruled out until the driver gives feedback. The track only decides the base setup you run first.
 
 ### Setup ranges
 
