@@ -29,6 +29,7 @@
   --window:rgba(29,95,209,.30); --track:#e1e4ea;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html,body{margin:0}
 body{background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
 button,select,input{font:inherit;color:inherit}
@@ -61,6 +62,11 @@ header .sp{flex:1}
 .field{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);flex:1 1 200px;min-width:0;max-width:340px}
 .field select,.field input{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-height:40px;color:var(--text);width:100%}
 .session .sp{flex:1 1 0}
+.tab i,.who i{display:inline-block;width:4px;height:14px;border-radius:2px;margin-right:8px;vertical-align:-2px}
+.base{margin:0 0 16px;padding:12px 16px;border-radius:12px;border:1px solid var(--line);border-left:4px solid var(--accent);background:var(--panel);display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
+.base .vals{display:flex;flex-wrap:wrap;gap:6px 14px;font-weight:700}
+.base .vals small{display:block;font-weight:400;font-size:11px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.base .sp{flex:1}
 .check{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);min-height:40px}
 .check input{width:16px;height:16px;accent-color:var(--accent)}
 
@@ -119,6 +125,15 @@ td.diff{color:var(--focus);font-weight:700}
 .pill.n{background:transparent;color:var(--muted);font-weight:400}
 .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;background:var(--muted);vertical-align:1px}
 .dot.in{background:var(--great)}
+.only-sm{display:none}
+.runcard{padding:12px 16px;border-bottom:1px solid var(--line)}
+.runcard:last-child{border-bottom:0}
+.runcard .top{display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.runcard .top strong{flex:1}
+.runcard .vals{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;font-weight:700;margin-bottom:8px}
+.runcard .vals small,.runcard .fbs small{display:block;font-weight:400;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.runcard .fbs{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.runcard .fbs .pill{width:auto;min-width:0;display:block;font-size:11px;padding:3px 0}
 .empty{padding:20px 16px;color:var(--muted);font-size:14px}
 .stack{display:grid;gap:16px;margin-top:16px}
 details.help{margin-top:16px;color:var(--muted);font-size:14px}
@@ -127,9 +142,23 @@ details.help ol{margin:8px 0;padding-left:20px}
 details.help li{margin:4px 0}
 footer{margin-top:28px;font-size:12px;color:var(--muted)}
 footer a{color:inherit}
-@media (max-width:520px){
+@media (max-width:640px){
+  .wrap{padding:0 12px 96px}
   .logo span{display:none}
-  .chip{font-size:12px}
+  .field{max-width:none;flex-basis:100%}
+  .chip{font-size:13px;min-height:44px}
+  .step{width:44px;height:44px}
+  .slide input[type=range]{height:44px}
+  .btn{min-height:44px}
+  .btn.sm{min-height:36px}
+  th,td{padding:8px 6px}
+  .hide-sm{display:none}
+  .only-sm{display:block}
+  /* Find setup stays reachable while scrolling */
+  .findbar{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--panel);border-top:1px solid var(--line);padding:10px 12px calc(10px + env(safe-area-inset-bottom));border-radius:0}
+  .findbar .btn{flex:1}
+  .findbar #possible{flex-basis:100%;font-size:12px;text-align:center}
+  .findbar .sp{display:none}
 }
 </style>
 </head>
@@ -141,26 +170,31 @@ footer a{color:inherit}
     <button class="btn quiet sm" id="themeBtn" type="button">Theme</button>
   </header>
 
-  <div class="tabs" id="tabs" role="tablist" aria-label="Cars"></div>
+  <div class="tabs" id="tabs" role="tablist" aria-label="Driver slots"></div>
 
   <div class="session">
-    <label class="field">Car / driver
-      <input id="carName" type="text" maxlength="24" autocomplete="off">
-    </label>
     <label class="field">Track
       <select id="trackSel"></select>
     </label>
+    <label class="field">Driver
+      <select id="driverSel"></select>
+    </label>
+    <label class="field" id="nameWrap">Custom name
+      <input id="carName" type="text" maxlength="24" autocomplete="off" placeholder="Name this slot">
+    </label>
     <label class="check" id="winWrap"><input type="checkbox" id="useWin"> <span id="winLabel">Start from this track's usual range</span></label>
     <div class="sp"></div>
-    <button class="btn quiet" id="removeCar" type="button">Remove car</button>
+    <button class="btn quiet" id="removeCar" type="button">Remove slot</button>
   </div>
+
+  <div class="base" id="base"></div>
 
   <div class="grid">
     <section class="panel" aria-labelledby="hSetup">
       <h2 id="hSetup">Setup <span class="sp"></span><span class="hint">what the car is running</span></h2>
       <div id="setupRows"></div>
       <div class="actions">
-        <button class="btn" id="presetBtn" type="button">Load track preset</button>
+        <button class="btn" id="presetBtn" type="button">Load base setup</button>
         <button class="btn quiet" id="lastBtn" type="button">Back to last run</button>
       </div>
     </section>
@@ -168,7 +202,7 @@ footer a{color:inherit}
     <section class="panel" aria-labelledby="hFb">
       <h2 id="hFb">Driver feedback <span class="sp"></span><span class="hint">for the setup you ran</span></h2>
       <div id="fbRows"></div>
-      <div class="actions">
+      <div class="actions findbar">
         <span class="muted num" id="possible"></span>
         <span class="sp"></span>
         <button class="btn primary" id="findBtn" type="button">Find setup →</button>
@@ -192,7 +226,7 @@ footer a{color:inherit}
   <details class="help">
     <summary>How to use it</summary>
     <ol>
-      <li>Pick the track. The setup jumps to a preset for that track. Put the same values on the car in the game.</li>
+      <li>Pick the track and the driver. The sliders jump to the base setup for that track. Put the same values on the car in the game.</li>
       <li>Run a practice stint, then tap what the driver said for each of the five areas.</li>
       <li>Press <strong>Find setup</strong>. The run is saved and the sliders move to the next setup to try.</li>
       <li>Repeat until every area is Optimal. Areas the driver hasn't rated yet can be left blank.</li>
@@ -215,7 +249,7 @@ footer a{color:inherit}
 const PARAMS = [
   {name:"Front Wing Angle", short:"Front", steps:20, fmt:i=>(i*0.5).toFixed(1)},
   {name:"Rear Wing Angle",  short:"Rear",  steps:14, fmt:i=>(9+i*0.5).toFixed(1)},
-  {name:"Anti-Roll Distribution", short:"Anti-roll", steps:8, fmt:i=>`${9-i}:${1+i}`},
+  {name:"Anti-Roll Distribution", short:"ARB", steps:8, fmt:i=>`${9-i}:${1+i}`},
   {name:"Tyre Camber",      short:"Camber", steps:16, fmt:i=>`-${(2.7+i*0.05).toFixed(2)}°`},
   {name:"Toe-Out",          short:"Toe",   steps:20, fmt:i=>`${(i*0.05).toFixed(2)}°`},
 ];
@@ -261,6 +295,21 @@ const TRACKS = [
   {id:"QA", name:"Qatar",          place:"Lusail",        base:[.80,.571429,.25,.8125,.90]},
   {id:"AE", name:"Abu Dhabi",      place:"Yas Marina",    win:[[.45,.53],[.49,.62],[.48,.62],[.47,.69],[.44,.56]]},
 ];
+/* 2024 grid as the game starts */
+const TEAMS = [
+  ["Red Bull Racing","#3671C6",["Max Verstappen","Sergio Pérez"]],
+  ["Mercedes","#27F4D2",["Lewis Hamilton","George Russell"]],
+  ["Ferrari","#E8002D",["Charles Leclerc","Carlos Sainz"]],
+  ["McLaren","#FF8000",["Lando Norris","Oscar Piastri"]],
+  ["Aston Martin","#229971",["Fernando Alonso","Lance Stroll"]],
+  ["Alpine","#FF87BC",["Pierre Gasly","Esteban Ocon"]],
+  ["Williams","#64C4FF",["Alexander Albon","Logan Sargeant"]],
+  ["Visa Cash App RB","#6692FF",["Yuki Tsunoda","Daniel Ricciardo"]],
+  ["Kick Sauber","#52E252",["Valtteri Bottas","Zhou Guanyu"]],
+  ["Haas","#B6BABD",["Nico Hülkenberg","Kevin Magnussen"]],
+];
+const DRIVER_TEAM = {};
+TEAMS.forEach(([team,color,ds])=>ds.forEach(d=>DRIVER_TEAM[d]={team,color}));
 const TRACK = Object.fromEntries(TRACKS.map(t=>[t.id,t]));
 const WIN_PAD = 0.01;
 
@@ -340,7 +389,11 @@ function solve(slot){
   const res=scan(areas.map(a=>a.iv),slot.runs.map(r=>r.s),6);
   return {areas,...res};
 }
+const PRESET={};
 function preset(trackId){
+  return (PRESET[trackId]||(PRESET[trackId]=computePreset(trackId))).slice();
+}
+function computePreset(trackId){
   const t=TRACK[trackId];
   if(!t.win) return t.base.map((x,i)=>Math.round(x*PARAMS[i].steps));
   return scan(t.win.map(w=>[w]),[],1).top[0].s;
@@ -348,13 +401,13 @@ function preset(trackId){
 
 /* ============ State ============ */
 const KEY="f1m24-setup-calc";
-const newSlot=(name,track="BH")=>({name,track,useWin:true,setup:preset(track),fb:[null,null,null,null,null],runs:[]});
+const newSlot=(name,track="BH")=>({name,driver:"",track,useWin:true,setup:preset(track),fb:[null,null,null,null,null],runs:[]});
 function load(){
   try{
     const s=JSON.parse(localStorage.getItem(KEY));
     if(s && Array.isArray(s.slots) && s.slots.length && s.slots.every(x=>TRACK[x.track] && x.setup && x.runs)) return s;
   }catch(e){}
-  return {active:0,theme:null,slots:[newSlot("Car 1"),newSlot("Car 2")]};
+  return {active:0,theme:null,slots:[newSlot("Driver 1"),newSlot("Driver 2")]};
 }
 let state=load();
 let result=null;      // solver output for the active car
@@ -364,16 +417,23 @@ const cur=()=>state.slots[Math.min(state.active,state.slots.length-1)];
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const f3=v=>Math.max(0,v).toFixed(3).replace(/^0\./,".");
+const slotName=(s,i)=>s.driver && DRIVER_TEAM[s.driver] ? s.driver : (s.name||"Driver "+(i+1));
+const slotColor=s=>s.driver && DRIVER_TEAM[s.driver] ? DRIVER_TEAM[s.driver].color : "var(--muted)";
 const lastRun=()=>{const r=cur().runs;return r.length?r[r.length-1]:null;};
 
 /* ============ Rendering ============ */
 function renderTabs(){
   $("tabs").innerHTML=state.slots.map((s,i)=>
-    `<button class="tab" role="tab" type="button" aria-selected="${i===state.active}" data-i="${i}">${esc(s.name||"Car "+(i+1))}</button>`
-  ).join("")+`<button class="tab" type="button" data-add="1" aria-label="Add car">+ Add car</button>`;
+    `<button class="tab" role="tab" type="button" aria-selected="${i===state.active}" data-i="${i}"><i style="background:${slotColor(s)}"></i>${esc(slotName(s,i))}</button>`
+  ).join("")+`<button class="tab" type="button" data-add="1">+ Add slot</button>`;
 }
 function renderSession(){
   const s=cur(), t=TRACK[s.track];
+  const custom=!(s.driver && DRIVER_TEAM[s.driver]);
+  $("driverSel").innerHTML=`<option value="">Custom name…</option>`+TEAMS.map(([team,,ds])=>
+    `<optgroup label="${esc(team)}">${ds.map(d=>`<option>${esc(d)}</option>`).join("")}</optgroup>`).join("");
+  $("driverSel").value=custom?"":s.driver;
+  $("nameWrap").hidden=!custom;
   $("carName").value=s.name;
   $("trackSel").innerHTML=TRACKS.map((t,i)=>`<option value="${t.id}">R${i+1} · ${esc(t.name)} — ${esc(t.place)}</option>`).join("");
   $("trackSel").value=s.track;
@@ -444,12 +504,12 @@ function renderCands(){
   if(!result.top.length){ $("cands").innerHTML=`<div class="empty">No setups left to suggest.</div>`; return; }
   $("cands").innerHTML=`<table>
     <thead><tr><th>#</th>${PARAMS.map(p=>`<th>${p.short}</th>`).join("")}
-      ${STATS.map((st,k)=>`<th class="${k?"":"sep"}">${st.name}</th>`).join("")}<th></th></tr></thead>
+      ${STATS.map((st,k)=>`<th class="hide-sm ${k?"":"sep"}">${st.name}</th>`).join("")}<th></th></tr></thead>
     <tbody>${result.top.map((c,i)=>{
       const on=c.s.every((v,j)=>v===now[j]);
       return `<tr><td class="num">${i+1}</td>
       ${c.s.map((v,j)=>`<td class="num${v!==now[j]?" diff":""}">${PARAMS[j].fmt(v)}</td>`).join("")}
-      ${c.e.map((v,k)=>`<td class="num ${k?"":"sep"}"><span class="dot ${inside(result.areas[k].iv,v)?"in":""}"></span>${f3(v)}</td>`).join("")}
+      ${c.e.map((v,k)=>`<td class="num hide-sm ${k?"":"sep"}"><span class="dot ${inside(result.areas[k].iv,v)?"in":""}"></span>${f3(v)}</td>`).join("")}
       <td>${on?`<span class="muted">On car</span>`:`<button class="btn sm" type="button" data-cand="${i}">Use</button>`}</td></tr>`;
     }).join("")}</tbody></table>`;
 }
@@ -457,14 +517,28 @@ function renderRuns(){
   const s=cur();
   $("clearRuns").hidden=!s.runs.length;
   if(!s.runs.length){ $("runs").innerHTML=`<div class="empty">No runs yet. Set the feedback above and press Find setup.</div>`; return; }
-  $("runs").innerHTML=`<table>
+  const acts=i=>`<button class="btn quiet sm" type="button" data-loadrun="${i}">Load</button>
+          <button class="btn quiet sm" type="button" data-delrun="${i}" aria-label="Delete run ${i+1}">Delete</button>`;
+  const table=`<table class="hide-sm">
     <thead><tr><th>Run</th>${PARAMS.map(p=>`<th>${p.short}</th>`).join("")}
       ${STATS.map((st,k)=>`<th class="${k?"":"sep"}">${st.name}</th>`).join("")}<th></th></tr></thead>
     <tbody>${s.runs.map((r,i)=>`<tr><td class="num">${i+1}</td>
       ${r.s.map((v,j)=>`<td class="num">${PARAMS[j].fmt(v)}</td>`).join("")}
       ${r.fb.map((f,k)=>`<td class="${k?"":"sep"}"><span class="pill ${f||"n"}">${f?FBNAME[f]:"—"}</span></td>`).join("")}
-      <td><button class="btn quiet sm" type="button" data-loadrun="${i}">Load</button>
-          <button class="btn quiet sm" type="button" data-delrun="${i}" aria-label="Delete run ${i+1}">Delete</button></td></tr>`).reverse().join("")}</tbody></table>`;
+      <td>${acts(i)}</td></tr>`).reverse().join("")}</tbody></table>`;
+  const cards=`<div class="only-sm">${s.runs.map((r,i)=>`<div class="runcard">
+      <div class="top"><strong>Run ${i+1}</strong>${acts(i)}</div>
+      <div class="vals num">${r.s.map((v,j)=>`<span><small>${PARAMS[j].short}</small>${PARAMS[j].fmt(v)}</span>`).join("")}</div>
+      <div class="fbs">${r.fb.map((f,k)=>`<span><small>${["Overst.","Braking","Corner.","Traction","Straights"][k]}</small><span class="pill ${f||"n"}">${f?FBNAME[f]:"—"}</span></span>`).join("")}</div>
+    </div>`).reverse().join("")}</div>`;
+  $("runs").innerHTML=table+cards;
+}
+function renderBase(){
+  const s=cur(), t=TRACK[s.track], b=preset(s.track), i=state.slots.indexOf(s);
+  const on=b.every((v,j)=>v===s.setup[j]);
+  $("base").innerHTML=`<div><strong>Base setup · ${esc(t.name)}</strong><br><span class="muted who"><i style="background:${slotColor(s)}"></i>${esc(slotName(s,i))} · run this first to get baseline feedback</span></div>
+    <div class="vals num">${PARAMS.map((p,j)=>`<span><small>${p.short}</small>${p.fmt(b[j])}</span>`).join("")}</div>
+    <span class="sp"></span>${on?`<span class="muted">On the sliders</span>`:`<button class="btn sm" type="button" id="baseUse">Load</button>`}`;
 }
 function renderStatus(){
   const s=cur(), last=lastRun(), el=$("status");
@@ -476,7 +550,7 @@ function renderStatus(){
   let msg;
   if(note){ msg=note; }
   else if(done){ msg=`<strong>All five areas are Optimal.</strong> <span class="muted">Run ${s.runs.length} is the setup to keep.</span>`; }
-  else if(!s.runs.length){ msg=`<strong>${esc(TRACK[s.track].name)}.</strong> <span class="muted">Put this setup on the car, run a stint, then enter the feedback.</span>`; }
+  else if(!s.runs.length){ msg=`<strong>${esc(TRACK[s.track].name)}.</strong> <span class="muted">Put the base setup on the car, run a stint, then enter the feedback.</span>`; }
   else{
     const locked=result.areas.filter((a,k)=>s.runs.some(r=>r.fb[k]==="o")).length;
     msg=`<strong>${s.runs.length} run${s.runs.length>1?"s":""} logged.</strong> <span class="muted">${locked} of 5 areas have hit Optimal at least once.</span>`;
@@ -486,7 +560,7 @@ function renderStatus(){
 function recompute(){ result=solve(cur()); }
 function renderAll(){
   recompute();
-  renderTabs(); renderSession(); renderSetup(); renderFeedback(); renderCands(); renderRuns(); renderStatus();
+  renderTabs(); renderSession(); renderSetup(); renderFeedback(); renderCands(); renderRuns(); renderStatus(); renderBase();
   save();
 }
 
@@ -494,7 +568,7 @@ function renderAll(){
 function setParam(i,v){
   const s=cur();
   s.setup[i]=Math.max(0,Math.min(PARAMS[i].steps,v));
-  updateLive(); renderCands(); save();
+  updateLive(); renderCands(); renderBase(); save();
 }
 function findSetup(){
   const s=cur();
@@ -516,21 +590,23 @@ function findSetup(){
 $("tabs").addEventListener("click",ev=>{
   const b=ev.target.closest("button"); if(!b) return;
   if(b.dataset.add){
-    state.slots.push(newSlot("Car "+(state.slots.length+1),cur().track));
+    state.slots.push(newSlot("Driver "+(state.slots.length+1),cur().track));
     state.active=state.slots.length-1;
   }else state.active=+b.dataset.i;
   renderAll();
 });
-$("carName").addEventListener("input",ev=>{ cur().name=ev.target.value; renderTabs(); save(); });
+$("carName").addEventListener("input",ev=>{ cur().name=ev.target.value; renderTabs(); renderBase(); save(); });
+$("driverSel").addEventListener("change",ev=>{ cur().driver=ev.target.value; renderAll(); if(!cur().driver) $("carName").focus(); });
+$("base").addEventListener("click",ev=>{ if(ev.target.id==="baseUse"){ cur().setup=preset(cur().track); renderAll(); } });
 $("trackSel").addEventListener("change",ev=>{
   const s=cur();
-  if(s.runs.length && !confirm("Changing track clears this car's practice runs. Continue?")){ ev.target.value=s.track; return; }
+  if(s.runs.length && !confirm("Changing track clears this driver's practice runs. Continue?")){ ev.target.value=s.track; return; }
   s.track=ev.target.value; s.runs=[]; s.fb=[null,null,null,null,null]; s.useWin=true; s.setup=preset(s.track);
   renderAll();
 });
 $("useWin").addEventListener("change",ev=>{ cur().useWin=ev.target.checked; renderAll(); });
 $("removeCar").addEventListener("click",()=>{
-  if(state.slots.length<2 || !confirm(`Remove "${cur().name}" and its runs?`)) return;
+  if(state.slots.length<2 || !confirm(`Remove "${slotName(cur(),state.active)}" and its runs?`)) return;
   state.slots.splice(state.active,1);
   state.active=Math.max(0,state.active-1);
   renderAll();
@@ -565,7 +641,7 @@ $("runs").addEventListener("click",ev=>{
 });
 $("clearRuns").addEventListener("click",()=>{
   const s=cur();
-  if(!s.runs.length || !confirm("Clear all practice runs for this car?")) return;
+  if(!s.runs.length || !confirm("Clear all practice runs for this driver?")) return;
   s.runs=[]; s.fb=[null,null,null,null,null]; s.setup=preset(s.track);
   renderAll();
 });

@@ -6,12 +6,13 @@ It is one static page (`index.html`). There is no server and no account, and it 
 
 ## How to use it
 
-1. Pick the track. The sliders jump to a preset for that track. Put the same values on the car in the game.
-2. Run a practice stint. For each of Oversteer, Braking, Cornering, Traction and Straights, tap what the driver said: **Optimal**, **Great**, **Good** or **Bad**. Leave an area blank if the driver hasn't rated it yet.
-3. Press **Find setup**. The run is saved and the sliders move to the next setup to try.
-4. Repeat until all five areas are Optimal.
+1. Pick the track and the driver from the drop-downs. Drivers are the 2024 grid, grouped by team; choose **Custom name…** to type your own.
+2. The **Base setup** card shows the starting setup for that track, and the sliders are already on it. Put the same values on the car in the game.
+3. Run a practice stint. For each of Oversteer, Braking, Cornering, Traction and Straights, tap what the driver said: **Optimal**, **Great**, **Good** or **Bad**. Leave an area blank if the driver hasn't rated it yet.
+4. Press **Find setup**. The run is saved and the sliders move to the next setup to try.
+5. Repeat until all five areas are Optimal.
 
-Each car has its own tab with its own track, setup and runs. Everything is saved in your browser.
+Each driver slot has its own tab with its own track, setup and runs. Everything is saved in your browser. The page has no ads and no tracking, and it is laid out for phones as well as desktop.
 
 ## How it works
 
