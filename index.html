@@ -62,6 +62,10 @@ header .sp{flex:1}
 .field{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);flex:1 1 200px;min-width:0;max-width:340px}
 .field select,.field input{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-height:40px;color:var(--text);width:100%}
 .session .sp{flex:1 1 0}
+.trackrow{display:flex;gap:8px}
+.trackrow select{flex:1;min-width:0}
+.trackrow .btn{white-space:nowrap;color:var(--text);font-size:15px}
+.field:has(.trackrow){max-width:440px;flex-basis:300px}
 .tab i,.who i{display:inline-block;width:4px;height:14px;border-radius:2px;margin-right:8px;vertical-align:-2px}
 .base{margin:0 0 16px;padding:12px 16px;border-radius:12px;border:1px solid var(--line);border-left:4px solid var(--accent);background:var(--panel);display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
 .base .vals{display:flex;flex-wrap:wrap;gap:6px 14px;font-weight:700}
@@ -173,9 +177,13 @@ footer a{color:inherit}
   <div class="tabs" id="tabs" role="tablist" aria-label="Driver slots"></div>
 
   <div class="session">
-    <label class="field">Track
-      <select id="trackSel"></select>
-    </label>
+    <div class="field">
+      <label for="trackSel">Track</label>
+      <div class="trackrow">
+        <select id="trackSel"></select>
+        <button class="btn" id="nextTrack" type="button">Next →</button>
+      </div>
+    </div>
     <label class="field">Driver
       <select id="driverSel"></select>
     </label>
@@ -601,7 +609,18 @@ $("base").addEventListener("click",ev=>{ if(ev.target.id==="baseUse"){ cur().set
 $("trackSel").addEventListener("change",ev=>{
   const s=cur();
   if(s.runs.length && !confirm("Changing track clears this driver's practice runs. Continue?")){ ev.target.value=s.track; return; }
-  s.track=ev.target.value; s.runs=[]; s.fb=[null,null,null,null,null]; s.useWin=true; s.setup=preset(s.track);
+  goTrack(s,ev.target.value);
+  renderAll();
+});
+function goTrack(slot,id){
+  slot.track=id; slot.runs=[]; slot.fb=[null,null,null,null,null]; slot.useWin=true; slot.setup=preset(id);
+}
+/* next race weekend: every slot on this track moves on together */
+$("nextTrack").addEventListener("click",()=>{
+  const from=cur().track, i=TRACKS.findIndex(t=>t.id===from), next=TRACKS[(i+1)%TRACKS.length];
+  const group=state.slots.filter(s=>s.track===from);
+  if(group.some(s=>s.runs.length) && !confirm(`Move to ${next.name}? This clears the practice runs from ${TRACK[from].name}.`)) return;
+  group.forEach(s=>goTrack(s,next.id));
   renderAll();
 });
 $("useWin").addEventListener("change",ev=>{ cur().useWin=ev.target.checked; renderAll(); });
