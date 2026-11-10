@@ -3,656 +3,584 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>F1M Setup Calculator</title>
-<meta name="description" content="Offline car setup solver for F1 Manager 2024 with 2024, 2025 and 2026 calendars and drivers.">
-<meta name="theme-color" content="#111318">
-<link rel="manifest" href="manifest.webmanifest">
+<title>F1 Manager 2024 Setup Calculator</title>
+<meta name="description" content="Car setup calculator for F1 Manager 2024. Enter driver feedback, get the next setup to try.">
+<meta name="theme-color" content="#0b0d12">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="F1M Setup">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <style>
 :root{
-  --bg:#f4f5f7; --panel:#ffffff; --panel2:#f0f1f4; --line:#d9dce3; --text:#16181d; --muted:#626976;
-  --accent:#e10600; --accent-fg:#fff; --ok:#0f9d58; --great:#2563eb; --opt:#0891b2; --bad:#dc2626;
-  --feas:rgba(8,145,178,.22); --shadow:0 1px 2px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.05);
+  --bg:#0b0d12; --panel:#141821; --panel2:#1c212c; --line:#283040; --text:#e9ecf2; --muted:#8e96a6;
+  --accent:#ff2d2d; --accent-fg:#fff; --focus:#6aa8ff;
+  --opt:#b388ff; --great:#34d27b; --good:#f2c230; --bad:#ff5a5f; --chip-fg:#0b0d12;
+  --window:rgba(106,168,255,.38); --track:#232a37;
 }
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --bg:#0f1115; --panel:#171a20; --panel2:#1f232b; --line:#2c313b; --text:#eceef2; --muted:#9aa1ad;
-    --accent:#ff1e1e; --ok:#34d399; --great:#60a5fa; --opt:#22d3ee; --bad:#f87171; --feas:rgba(34,211,238,.22);
-    --shadow:0 1px 2px rgba(0,0,0,.4);
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#f2f3f6; --panel:#ffffff; --panel2:#eef0f4; --line:#d6dae2; --text:#14171d; --muted:#5d6573;
+    --accent:#d90f0f; --focus:#1d5fd1;
+    --opt:#7c3aed; --great:#15803d; --good:#a16207; --bad:#dc2626; --chip-fg:#fff;
+    --window:rgba(29,95,209,.30); --track:#e1e4ea;
   }
 }
-:root[data-theme="dark"]{
-  --bg:#0f1115; --panel:#171a20; --panel2:#1f232b; --line:#2c313b; --text:#eceef2; --muted:#9aa1ad;
-  --accent:#ff1e1e; --ok:#34d399; --great:#60a5fa; --opt:#22d3ee; --bad:#f87171; --feas:rgba(34,211,238,.22);
-  --shadow:0 1px 2px rgba(0,0,0,.4);
+:root[data-theme="light"]{
+  --bg:#f2f3f6; --panel:#ffffff; --panel2:#eef0f4; --line:#d6dae2; --text:#14171d; --muted:#5d6573;
+  --accent:#d90f0f; --focus:#1d5fd1;
+  --opt:#7c3aed; --great:#15803d; --good:#a16207; --bad:#dc2626; --chip-fg:#fff;
+  --window:rgba(29,95,209,.30); --track:#e1e4ea;
 }
 *{box-sizing:border-box}
 html,body{margin:0}
-body{background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-header{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:5}
-header h1{font-size:17px;margin:0;letter-spacing:.2px}
-header .stripe{width:6px;height:26px;background:var(--accent);border-radius:2px;transform:skewX(-14deg)}
-header .sp{flex:1}
-main{max-width:1180px;margin:0 auto;padding:16px;display:grid;gap:16px;grid-template-columns:1fr}
-@media (min-width:980px){ main{grid-template-columns:1.05fr .95fr} .full{grid-column:1/-1} }
-.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:var(--shadow);min-width:0}
-.card h2{font-size:14px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 12px}
-.row{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
-label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);flex:1 1 160px;min-width:0}
-select,input[type=number],input[type=text]{font:inherit;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;min-width:0}
-button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:8px 12px}
-button:hover{filter:brightness(1.06)}
-button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg);font-weight:600}
-button.small{padding:4px 8px;font-size:13px}
-button.ghost{background:transparent}
-.driverchip{display:inline-flex;align-items:center;gap:8px;font-weight:600;margin-top:12px;font-size:14px}
-.driverchip i{width:10px;height:22px;border-radius:2px;display:inline-block}
+body{background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
 .muted{color:var(--muted)}
-.small{font-size:13px}
-/* setup sliders */
-.param{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
-.param:last-child{border-bottom:0}
-.param .name{font-weight:600;font-size:14px}
-.param .val{font-variant-numeric:tabular-nums;text-align:right;font-weight:700;font-size:16px}
-.param .ctl{grid-column:1/-1;display:flex;align-items:center;gap:10px}
-.step{width:40px;height:40px;flex:0 0 40px;padding:0;font-size:20px;font-weight:700;line-height:1;border-radius:50%;touch-action:manipulation}
-.param .ticks{grid-column:1/-1;display:flex;justify-content:space-between;font-size:11px;color:var(--muted);padding:0 50px}
-input[type=range]{-webkit-appearance:none;appearance:none;flex:1;min-width:0;height:40px;background:transparent;margin:0;touch-action:pan-y}
-input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
-input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:4px;background:linear-gradient(90deg,var(--accent) 0 var(--pct,50%),var(--line) var(--pct,50%) 100%)}
-input[type=range]::-moz-range-track{height:8px;border-radius:4px;background:var(--line)}
-input[type=range]::-moz-range-progress{height:8px;border-radius:4px;background:var(--accent)}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;margin-top:-10px;border-radius:50%;background:#fff;border:3px solid var(--accent);box-shadow:0 1px 4px rgba(0,0,0,.35)}
-input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#fff;border:3px solid var(--accent);box-shadow:0 1px 4px rgba(0,0,0,.35)}
-.baserow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
-.baserow select{flex:1 1 200px;width:auto}
-/* feedback grid */
-.fbgrid{display:flex;flex-direction:column;gap:10px;margin-top:8px}
-.fbrow{display:grid;grid-template-columns:96px 1fr;gap:8px;align-items:center}
-.fbrow .lbl{font-weight:600;font-size:14px}
-.chips{display:flex;flex-wrap:wrap;gap:6px}
-.chip{min-height:38px;min-width:44px;padding:0 10px;font-weight:600;font-size:13px;touch-action:manipulation}
-.chip.sub{min-height:32px;font-size:12px}
-.chip:not(.on){background:var(--panel2)!important;border-color:var(--line)!important;color:var(--muted)!important}
-.chip.on{box-shadow:0 0 0 1px currentColor inset}
-.fb-unknown.on{background:var(--panel2);border-color:var(--text);color:var(--text)}
-@media (max-width:520px){ .fbrow{grid-template-columns:1fr} }
-.fb-unknown{color:var(--muted)}
-.fb-optimal{background:color-mix(in srgb,var(--opt) 20%,transparent);border-color:var(--opt);color:var(--opt)}
-.fb-great{background:color-mix(in srgb,var(--great) 18%,transparent);border-color:var(--great);color:var(--great)}
-.fb-good{background:color-mix(in srgb,var(--ok) 16%,transparent);border-color:var(--ok);color:var(--ok)}
-.fb-bad,.fb-badhigh,.fb-badlow{background:color-mix(in srgb,var(--bad) 16%,transparent);border-color:var(--bad);color:var(--bad)}
-/* bars */
-.bar{position:relative;height:22px;background:var(--panel2);border:1px solid var(--line);border-radius:6px;overflow:hidden}
-.bar .feas{position:absolute;top:0;bottom:0;min-width:3px;background:var(--feas)}
-.bar .mk{position:absolute;top:-1px;bottom:-1px;width:3px;margin-left:-1.5px;border-radius:2px}
-.bar .mk.cur{background:var(--text)}
-.bar .mk.rec{background:var(--accent)}
-.barrow{display:grid;grid-template-columns:96px 1fr 120px;gap:10px;align-items:center;padding:5px 0}
-.barrow .lbl{font-weight:600;font-size:14px}
-.barrow .st{font-size:12px;text-align:right;font-variant-numeric:tabular-nums}
-@media (max-width:520px){ .barrow{grid-template-columns:80px 1fr} .barrow .st{grid-column:1/-1;text-align:left} }
-.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:8px}
-.legend b{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:5px}
-/* recommendation */
-.rec{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
-.rec > div{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center;min-width:0}
-.rec .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
-.rec .v{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px}
-.rec .d{font-size:12px;color:var(--muted)}
-@media (max-width:620px){ .rec{grid-template-columns:repeat(2,minmax(0,1fr))} }
-.status{margin:12px 0 0;padding:10px 12px;border-radius:8px;background:var(--panel2);border:1px solid var(--line);font-size:14px}
-.status.warn{border-color:var(--bad);color:var(--bad)}
-.status.good{border-color:var(--opt)}
-/* history */
-table{width:100%;border-collapse:collapse;font-size:13px}
-th,td{padding:6px 6px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
-th{color:var(--muted);font-weight:600;font-size:12px}
+
+.wrap{max-width:1160px;margin:0 auto;padding:0 16px 40px}
+header{display:flex;align-items:center;gap:12px;padding:18px 0 14px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;letter-spacing:-.01em;margin:0}
+.logo b{background:var(--accent);color:var(--accent-fg);border-radius:6px;padding:1px 8px;font-style:italic;font-weight:900}
+.logo span{color:var(--muted);font-weight:600}
+header .sp{flex:1}
+.btn{border:1px solid var(--line);background:var(--panel2);border-radius:8px;padding:8px 14px;font-weight:600;min-height:40px}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn.primary:hover{filter:brightness(1.1)}
+.btn.quiet{background:transparent}
+.btn.sm{padding:4px 10px;min-height:32px;font-size:13px}
+
+/* car tabs */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tab{border:0;background:none;padding:10px 16px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;margin-bottom:-1px}
+.tab:hover{color:var(--text)}
+.tab[aria-selected="true"]{color:var(--text);border-bottom-color:var(--accent)}
+
+/* session bar */
+.session{display:flex;flex-wrap:wrap;gap:12px;align-items:end;padding:16px 0}
+.field{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);flex:1 1 200px;min-width:0;max-width:340px}
+.field select,.field input{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-height:40px;color:var(--text);width:100%}
+.session .sp{flex:1 1 0}
+.check{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);min-height:40px}
+.check input{width:16px;height:16px;accent-color:var(--accent)}
+
+.grid{display:grid;gap:16px;grid-template-columns:1fr}
+@media (min-width:920px){.grid{grid-template-columns:1fr 1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;min-width:0}
+.panel > h2{display:flex;align-items:center;gap:8px;margin:0;padding:12px 16px;font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line)}
+.panel > h2 .sp{flex:1}
+.panel > h2 .hint{text-transform:none;letter-spacing:0;font-weight:400}
+.rowi{padding:12px 16px;border-bottom:1px solid var(--line)}
+.rowi:last-of-type{border-bottom:0}
+.rowhead{display:flex;align-items:baseline;gap:8px;margin-bottom:8px}
+.rowhead .name{font-weight:650}
+.rowhead .sp{flex:1}
+.rowhead .val{font-weight:700;font-size:17px}
+.rowhead .prev{font-size:12px;color:var(--muted)}
+.rowhead .prev.changed{color:var(--focus)}
+
+/* setup slider */
+.slide{display:flex;align-items:center;gap:8px}
+.slide input[type=range]{flex:1;min-width:0;height:28px;accent-color:var(--accent)}
+.step{width:36px;height:36px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);font-size:18px;line-height:1;font-weight:600}
+.step:hover{border-color:var(--muted)}
+
+/* feedback */
+.chips{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.chip{border:1px solid var(--line);background:var(--panel2);border-radius:8px;min-height:36px;padding:4px 2px;font-weight:650;font-size:13px}
+.chip:hover{border-color:var(--muted)}
+.chip[aria-pressed="true"]{color:var(--chip-fg)}
+.chip[data-f="o"][aria-pressed="true"]{background:var(--opt);border-color:var(--opt)}
+.chip[data-f="g"][aria-pressed="true"]{background:var(--great);border-color:var(--great)}
+.chip[data-f="d"][aria-pressed="true"]{background:var(--good);border-color:var(--good)}
+.chip[data-f="b"][aria-pressed="true"]{background:var(--bad);border-color:var(--bad)}
+.bar{position:relative;height:8px;border-radius:4px;background:var(--track);margin-top:12px}
+.bar .win{position:absolute;top:0;bottom:0;background:var(--window);border-radius:4px;min-width:3px}
+.bar .mark{position:absolute;top:-4px;width:4px;height:16px;margin-left:-2px;border-radius:2px;background:var(--text)}
+.barnote{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted);margin-top:6px}
+.barnote .warn{color:var(--bad)}
+
+.actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 16px;border-top:1px solid var(--line)}
+.actions .sp{flex:1}
+.status{margin:16px 0 0;padding:12px 16px;border-radius:12px;border:1px solid var(--line);background:var(--panel);display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center}
+.status.done{border-color:var(--opt)}
+.status strong{font-weight:700}
+
 .tablewrap{overflow-x:auto}
-.pill{display:inline-block;padding:1px 6px;border-radius:5px;font-weight:600;font-size:12px;border:1px solid transparent}
-footer{max-width:1180px;margin:0 auto;padding:8px 16px 32px;color:var(--muted);font-size:12px}
-.sr{position:absolute;left:-9999px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:9px 12px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)}
+th{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600}
+tbody tr:last-child td{border-bottom:0}
+th:first-child,td:first-child{text-align:left}
+td.sep,th.sep{border-left:1px solid var(--line)}
+td.diff{color:var(--focus);font-weight:700}
+.pill{display:inline-block;min-width:62px;text-align:center;border-radius:6px;padding:2px 8px;font-size:12px;font-weight:700;color:var(--chip-fg)}
+.pill.o{background:var(--opt)} .pill.g{background:var(--great)} .pill.d{background:var(--good)} .pill.b{background:var(--bad)}
+.pill.n{background:transparent;color:var(--muted);font-weight:400}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;background:var(--muted);vertical-align:1px}
+.dot.in{background:var(--great)}
+.empty{padding:20px 16px;color:var(--muted);font-size:14px}
+.stack{display:grid;gap:16px;margin-top:16px}
+details.help{margin-top:16px;color:var(--muted);font-size:14px}
+details.help summary{cursor:pointer;color:var(--text);font-weight:600;padding:6px 0}
+details.help ol{margin:8px 0;padding-left:20px}
+details.help li{margin:4px 0}
+footer{margin-top:28px;font-size:12px;color:var(--muted)}
+footer a{color:inherit}
+@media (max-width:520px){
+  .logo span{display:none}
+  .chip{font-size:12px}
+}
 </style>
 </head>
 <body>
-<header>
-  <div class="stripe"></div>
-  <h1>F1M Setup Calculator</h1>
-  <div class="sp"></div>
-  <button class="small ghost" id="themeBtn" title="Toggle light / dark">Theme</button>
-</header>
+<div class="wrap">
+  <header>
+    <h1 class="logo"><b>F1M24</b> Setup Calculator <span>· F1 Manager 2024</span></h1>
+    <div class="sp"></div>
+    <button class="btn quiet sm" id="themeBtn" type="button">Theme</button>
+  </header>
 
-<main>
-  <!-- SESSION -->
-  <section class="card full">
-    <h2>Session</h2>
-    <div class="row">
-      <label class="f">Season
-        <select id="year"></select>
-      </label>
-      <label class="f" style="flex-basis:220px">Grand Prix
-        <select id="track"></select>
-      </label>
-      <label class="f" style="flex-basis:220px">Driver
-        <select id="driver"></select>
-      </label>
-      <label class="f" id="customWrap" style="display:none">Custom driver name
-        <input type="text" id="customName" maxlength="40" placeholder="e.g. My Rookie">
-      </label>
-    </div>
-    <div class="driverchip" id="chip"></div>
-    <div class="small muted" id="trackNote" style="margin-top:6px"></div>
-  </section>
+  <div class="tabs" id="tabs" role="tablist" aria-label="Cars"></div>
 
-  <!-- CURRENT SETUP + FEEDBACK -->
-  <section class="card">
-    <h2>1 · Setup you ran</h2>
-    <div id="params"></div>
-    <div class="row" style="margin-top:6px">
-      <button class="small" id="useRec">Load recommended</button>
-    </div>
-    <h2 style="margin-top:20px">Baseline presets</h2>
-    <div class="small muted">A baseline is the setup you start a weekend from. Save your own, and pick one as the default for this track.</div>
-    <div class="baserow">
-      <select id="baseSel" aria-label="Baseline preset"></select>
-      <button class="small" id="baseLoad">Load</button>
-    </div>
-    <div class="baserow">
-      <button class="small" id="baseSave">Save current as baseline…</button>
-      <button class="small" id="baseDefault">Make default for this track</button>
-      <button class="small" id="baseDel">Delete</button>
-    </div>
-    <div class="small muted" id="baseNote" style="margin-top:6px"></div>
+  <div class="session">
+    <label class="field">Car / driver
+      <input id="carName" type="text" maxlength="24" autocomplete="off">
+    </label>
+    <label class="field">Track
+      <select id="trackSel"></select>
+    </label>
+    <label class="check" id="winWrap"><input type="checkbox" id="useWin"> <span id="winLabel">Start from this track's usual range</span></label>
+    <div class="sp"></div>
+    <button class="btn quiet" id="removeCar" type="button">Remove car</button>
+  </div>
 
-    <h2 style="margin-top:20px">2 · Driver feedback from that run</h2>
-    <div class="small muted">Tap what the driver said for each stat. Leave “—” if you don't know. For Bad, also pick the direction if the game tells you.</div>
-    <div class="fbgrid" id="fbgrid"></div>
-    <div class="row" style="margin-top:12px">
-      <button class="primary" id="addRun">Add practice run</button>
-      <button id="resetFb">Clear feedback</button>
-    </div>
-  </section>
+  <div class="grid">
+    <section class="panel" aria-labelledby="hSetup">
+      <h2 id="hSetup">Setup <span class="sp"></span><span class="hint">what the car is running</span></h2>
+      <div id="setupRows"></div>
+      <div class="actions">
+        <button class="btn" id="presetBtn" type="button">Load track preset</button>
+        <button class="btn quiet" id="lastBtn" type="button">Back to last run</button>
+      </div>
+    </section>
 
-  <!-- RESULT -->
-  <section class="card">
-    <h2>3 · Recommended next setup</h2>
-    <div class="rec" id="rec"></div>
-    <div class="status" id="status">Add feedback from a practice run to start narrowing the setup.</div>
+    <section class="panel" aria-labelledby="hFb">
+      <h2 id="hFb">Driver feedback <span class="sp"></span><span class="hint">for the setup you ran</span></h2>
+      <div id="fbRows"></div>
+      <div class="actions">
+        <span class="muted num" id="possible"></span>
+        <span class="sp"></span>
+        <button class="btn primary" id="findBtn" type="button">Find setup →</button>
+      </div>
+    </section>
+  </div>
 
-    <h2 style="margin-top:20px">Where the ideal can still be</h2>
-    <div id="bars"></div>
-    <div class="legend">
-      <span><b style="background:var(--feas)"></b>Possible ideal</span>
-      <span><b style="background:var(--text)"></b>Setup you ran</span>
-      <span><b style="background:var(--accent)"></b>Recommended</span>
-    </div>
-  </section>
+  <div class="status" id="status" role="status"></div>
 
-  <!-- HISTORY -->
-  <section class="card full">
-    <h2>Practice runs · <span id="histTitle"></span></h2>
-    <div class="tablewrap"><table id="hist"></table></div>
-    <div class="row" style="margin-top:12px">
-      <button class="small" id="undo">Remove last run</button>
-      <button class="small" id="clearAll">Clear this session</button>
-      <span class="sp" style="flex:1"></span>
-      <button class="small" id="exportBtn">Export all data</button>
-      <button class="small" id="importBtn">Import</button>
-      <input type="file" id="importFile" accept="application/json" class="sr">
-    </div>
-  </section>
-</main>
+  <div class="stack">
+    <section class="panel" aria-labelledby="hCand">
+      <h2 id="hCand">Suggested setups</h2>
+      <div class="tablewrap" id="cands"></div>
+    </section>
+    <section class="panel" aria-labelledby="hRuns">
+      <h2 id="hRuns">Practice runs <span class="sp"></span><button class="btn quiet sm" id="clearRuns" type="button">Clear runs</button></h2>
+      <div class="tablewrap" id="runs"></div>
+    </section>
+  </div>
 
-<footer>
-  Works offline: everything runs in your browser and saves on this device. Fan-made tool, not affiliated with Frontier, Formula 1 or any team.
-  Feedback bands used: Optimal &lt; 0.007, Great &lt; 0.04, Good &lt; 0.10, Bad ≥ 0.10 away from the ideal.
-</footer>
+  <details class="help">
+    <summary>How to use it</summary>
+    <ol>
+      <li>Pick the track. The setup jumps to a preset for that track. Put the same values on the car in the game.</li>
+      <li>Run a practice stint, then tap what the driver said for each of the five areas.</li>
+      <li>Press <strong>Find setup</strong>. The run is saved and the sliders move to the next setup to try.</li>
+      <li>Repeat until every area is Optimal. Areas the driver hasn't rated yet can be left blank.</li>
+    </ol>
+    <p>The blue band on each feedback bar is where that driver's ideal can still be. The marker is where the current setup sits. Each run shrinks the band.</p>
+  </details>
+
+  <footer>
+    Unofficial fan tool, not associated with Formula 1 or Frontier Developments. Inspired by <a href="https://f1setup.it" rel="noopener">f1setup.it</a>. Everything is saved in this browser only.
+  </footer>
+</div>
 
 <script>
 "use strict";
-/* ---------------- Game model (F1 Manager 2024) ----------------
-   Each setup parameter is normalised to 0..1. Each feedback stat is a
-   linear function of the five normalised parameters plus an offset.
-   The driver's hidden "ideal" is a point in feedback space; feedback
-   bands tell how far the run's value was from it.                    */
+/* ============ Game model: F1 Manager 2024 ============
+   A setup is five step indices. Each one is scaled to 0..1, and each of the
+   five feedback areas is a fixed linear mix of those five numbers. The driver
+   has a hidden ideal value per area; the feedback word tells how far off the
+   run was. */
 const PARAMS = [
-  {key:"fw",  name:"Front Wing",  min:0,   max:10,  step:0.5,  fmt:v=>v.toFixed(1)},
-  {key:"rw",  name:"Rear Wing",   min:9,   max:16,  step:0.5,  fmt:v=>v.toFixed(1)},
-  {key:"arb", name:"Anti-Roll",   min:1,   max:9,   step:1,    fmt:v=>`${10-v}:${v}`},
-  {key:"cam", name:"Tyre Camber", min:2.7, max:3.5, step:0.05, fmt:v=>`-${v.toFixed(2)}°`},
-  {key:"toe", name:"Toe-Out",     min:0,   max:1,   step:0.05, fmt:v=>`${v.toFixed(2)}°`},
+  {name:"Front Wing Angle", short:"Front", steps:20, fmt:i=>(i*0.5).toFixed(1)},
+  {name:"Rear Wing Angle",  short:"Rear",  steps:14, fmt:i=>(9+i*0.5).toFixed(1)},
+  {name:"Anti-Roll Distribution", short:"Anti-roll", steps:8, fmt:i=>`${9-i}:${1+i}`},
+  {name:"Tyre Camber",      short:"Camber", steps:16, fmt:i=>`-${(2.7+i*0.05).toFixed(2)}°`},
+  {name:"Toe-Out",          short:"Toe",   steps:20, fmt:i=>`${(i*0.05).toFixed(2)}°`},
 ];
 const STATS = [
-  {name:"Oversteer", offset:0.50, w:[ 0.40,-0.40,-0.10, 0.10, 0.00]},
-  {name:"Braking",   offset:0.45, w:[-0.20, 0.20, 0.15,-0.25, 0.20]},
-  {name:"Cornering", offset:0.20, w:[ 0.30, 0.25,-0.15, 0.25,-0.05]},
-  {name:"Traction",  offset:0.25, w:[-0.15, 0.25, 0.50,-0.10, 0.00]},
-  {name:"Straights", offset:1.00, w:[-0.10,-0.90, 0.00, 0.00, 0.00]},
+  {name:"Oversteer", base:0.50, w:[ 0.40,-0.40,-0.10, 0.10, 0.00]},
+  {name:"Braking",   base:0.45, w:[-0.20, 0.20, 0.15,-0.25, 0.20]},
+  {name:"Cornering", base:0.20, w:[ 0.30, 0.25,-0.15, 0.25,-0.05]},
+  {name:"Traction",  base:0.25, w:[-0.15, 0.25, 0.50,-0.10, 0.00]},
+  {name:"Straights", base:1.00, w:[-0.10,-0.90, 0.00, 0.00, 0.00]},
 ];
-const BAND = {opt:0.007, great:0.04, good:0.10};
-const FB = ["unknown","optimal","great","good","bad","badhigh","badlow"];
-const FB_LABEL = {unknown:"—",optimal:"Optimal",great:"Great",good:"Good",bad:"Bad",badhigh:"Bad ↑ high",badlow:"Bad ↓ low"};
+const TOTAL = PARAMS.reduce((a,p)=>a*(p.steps+1),1);
+/* distance from ideal: optimal < .007 <= great < .04 <= good < .10 <= bad */
+const EDGE = {o:[0,0.007], g:[0.007,0.04], d:[0.04,0.10], b:[0.10,Infinity]};
+const SLACK = 0.0015;              // tolerance for the game's rounding
+const FB = [["o","Optimal"],["g","Great"],["d","Good"],["b","Bad"]];
+const FBNAME = {o:"Optimal",g:"Great",d:"Good",b:"Bad"};
 
-PARAMS.forEach(p=>p.n = Math.round((p.max-p.min)/p.step)); // number of steps
-const toNorm = (i,v)=> (v-PARAMS[i].min)/(PARAMS[i].max-PARAMS[i].min);
-const fromNorm = (i,x)=> PARAMS[i].min + Math.round(x*PARAMS[i].n)*PARAMS[i].step;
-const snapIdx = (i,x)=> Math.max(0,Math.min(PARAMS[i].n,Math.round(x*PARAMS[i].n)));
-const effects = s => STATS.map(st=>st.offset + st.w.reduce((a,w,i)=>a+w*s[i],0));
+/* 2024 calendar. win = usual range of driver ideals at that track, per area.
+   base = starting setup (0..1) for tracks with no range data. */
+const TRACKS = [
+  {id:"BH", name:"Bahrain",        place:"Sakhir",        win:[[.57,.61],[.33,.40],[.50,.57],[.35,.41],[.64,.70]]},
+  {id:"SA", name:"Saudi Arabia",   place:"Jeddah",        win:[[.72,.79],[.08,.14],[.73,.76],[.10,.20],[.61,.74]]},
+  {id:"AU", name:"Australia",      place:"Melbourne",     win:[[.60,.65],[.39,.46],[.60,.70],[.31,.39],[.41,.45]]},
+  {id:"JP", name:"Japan",          place:"Suzuka",        win:[[.58,.62],[.20,.25],[.63,.72],[.38,.51],[.33,.47]]},
+  {id:"CN", name:"China",          place:"Shanghai",      base:[.30,.357143,.875,.125,.80]},
+  {id:"MIA",name:"Miami",          place:"Miami Gardens", win:[[.53,.60],[.26,.46],[.66,.76],[.50,.69],[.34,.43]]},
+  {id:"EMI",name:"Emilia-Romagna", place:"Imola",         win:[[.56,.61],[.22,.30],[.67,.74],[.38,.56],[.42,.50]]},
+  {id:"MC", name:"Monaco",         place:"Monte Carlo",   win:[[.54,.60],[.28,.52],[.78,.98],[.25,.38],[.00,.01]]},
+  {id:"CA", name:"Canada",         place:"Montréal",      win:[[.40,.50],[.55,.65],[.37,.41],[.59,.74],[.59,.64]]},
+  {id:"ES", name:"Spain",          place:"Barcelona",     win:[[.52,.65],[.40,.48],[.68,.82],[.28,.40],[.19,.30]]},
+  {id:"AT", name:"Austria",        place:"Spielberg",     win:[[.38,.43],[.55,.69],[.41,.52],[.72,.79],[.37,.45]]},
+  {id:"GB", name:"Great Britain",  place:"Silverstone",   win:[[.63,.69],[.26,.36],[.55,.68],[.15,.24],[.56,.69]]},
+  {id:"HU", name:"Hungary",        place:"Budapest",      win:[[.49,.51],[.52,.62],[.60,.75],[.68,.75],[.07,.21]]},
+  {id:"BE", name:"Belgium",        place:"Spa",           win:[[.56,.64],[.35,.47],[.37,.45],[.42,.52],[.83,.97]]},
+  {id:"NL", name:"Netherlands",    place:"Zandvoort",     win:[[.64,.67],[.39,.53],[.65,.79],[.32,.47],[.26,.40]]},
+  {id:"IT", name:"Italy",          place:"Monza",         win:[[.45,.53],[.61,.68],[.12,.19],[.64,.70],[.98,1.0]]},
+  {id:"AZ", name:"Azerbaijan",     place:"Baku",          win:[[.43,.46],[.65,.70],[.21,.24],[.61,.67],[.79,.86]]},
+  {id:"SG", name:"Singapore",      place:"Marina Bay",    win:[[.38,.49],[.65,.75],[.58,.66],[.35,.53],[.07,.14]]},
+  {id:"US", name:"United States",  place:"Austin",        win:[[.58,.62],[.28,.44],[.62,.75],[.57,.69],[.33,.47]]},
+  {id:"MX", name:"Mexico City",    place:"Mexico City",   win:[[.50,.57],[.34,.46],[.61,.69],[.59,.71],[.36,.49]]},
+  {id:"BR", name:"São Paulo",      place:"Interlagos",    win:[[.52,.58],[.39,.49],[.54,.67],[.56,.71],[.42,.50]]},
+  {id:"LV", name:"Las Vegas",      place:"Las Vegas",     base:[0,.214286,1,.375,.55]},
+  {id:"QA", name:"Qatar",          place:"Lusail",        base:[.80,.571429,.25,.8125,.90]},
+  {id:"AE", name:"Abu Dhabi",      place:"Yas Marina",    win:[[.45,.53],[.49,.62],[.48,.62],[.47,.69],[.44,.56]]},
+];
+const TRACK = Object.fromEntries(TRACKS.map(t=>[t.id,t]));
+const WIN_PAD = 0.01;
 
-/* inverse of the 5x5 weight matrix -> setup from desired feedback */
-const INV = (()=>{
-  const n=5, A=STATS.map((s,r)=>[...s.w, ...Array.from({length:n},(_,c)=>r===c?1:0)]);
-  for(let c=0;c<n;c++){
-    let p=c; for(let r=c+1;r<n;r++) if(Math.abs(A[r][c])>Math.abs(A[p][c])) p=r;
-    [A[c],A[p]]=[A[p],A[c]];
-    const d=A[c][c]; for(let k=0;k<2*n;k++) A[c][k]/=d;
-    for(let r=0;r<n;r++) if(r!==c){const f=A[r][c]; for(let k=0;k<2*n;k++) A[r][k]-=f*A[c][k];}
-  }
-  return A.map(r=>r.slice(n));
-})();
-const setupFromEffects = e => INV.map(row=>row.reduce((a,v,k)=>a+v*(e[k]-STATS[k].offset),0));
+/* ============ Solver ============ */
+const effects = s => STATS.map(st=>st.base + st.w.reduce((a,w,i)=>a + w*s[i]/PARAMS[i].steps,0));
 
-/* ---------------- Tracks ----------------
-   ideal: typical ideal feedback window per stat (from game data, where known).
-   Used only to propose a starting setup; the solver itself relies on your feedback.
-   base: community starting setup (0..1 scale) for in-game tracks without ideal data.
-   inGame:false = circuit is not in F1 Manager 2024, so it is left out of the track list. */
-const TRACKS = {
-  BH:{gp:"Bahrain",        circuit:"Sakhir",              ideal:[[.57,.61],[.33,.40],[.50,.57],[.35,.41],[.64,.70]]},
-  SA:{gp:"Saudi Arabia",   circuit:"Jeddah",              ideal:[[.72,.79],[.08,.14],[.73,.76],[.10,.20],[.61,.74]]},
-  AU:{gp:"Australia",      circuit:"Albert Park",         ideal:[[.60,.65],[.39,.46],[.60,.70],[.31,.39],[.41,.45]]},
-  JP:{gp:"Japan",          circuit:"Suzuka",              ideal:[[.58,.62],[.20,.25],[.63,.72],[.38,.51],[.33,.47]]},
-  CN:{gp:"China",          circuit:"Shanghai",            ideal:null, base:[.30,.357143,.875,.125,.80]},
-  MIA:{gp:"Miami",         circuit:"Miami Intl. Autodrome",ideal:[[.53,.60],[.26,.46],[.66,.76],[.50,.69],[.34,.43]]},
-  EMI:{gp:"Emilia-Romagna",circuit:"Imola",               ideal:[[.56,.61],[.22,.30],[.67,.74],[.38,.56],[.42,.50]]},
-  MC:{gp:"Monaco",         circuit:"Monte Carlo",         ideal:[[.54,.60],[.28,.52],[.78,.98],[.25,.38],[0,.01]]},
-  ES:{gp:"Spain",          circuit:"Barcelona-Catalunya", ideal:[[.52,.65],[.40,.48],[.68,.82],[.28,.40],[.19,.30]]},
-  MAD:{gp:"Spain (Madrid)",circuit:"Madring",             ideal:null, inGame:false},
-  CA:{gp:"Canada",         circuit:"Montréal",            ideal:[[.40,.50],[.55,.65],[.37,.41],[.59,.74],[.59,.64]]},
-  AT:{gp:"Austria",        circuit:"Red Bull Ring",       ideal:[[.38,.43],[.55,.69],[.41,.52],[.72,.79],[.37,.45]]},
-  GB:{gp:"Great Britain",  circuit:"Silverstone",         ideal:[[.63,.69],[.26,.36],[.55,.68],[.15,.24],[.56,.69]]},
-  BE:{gp:"Belgium",        circuit:"Spa-Francorchamps",   ideal:[[.56,.64],[.35,.47],[.37,.45],[.42,.52],[.83,.97]]},
-  HU:{gp:"Hungary",        circuit:"Hungaroring",         ideal:[[.49,.51],[.52,.62],[.60,.75],[.68,.75],[.07,.21]]},
-  NL:{gp:"Netherlands",    circuit:"Zandvoort",           ideal:[[.64,.67],[.39,.53],[.65,.79],[.32,.47],[.26,.40]]},
-  IT:{gp:"Italy",          circuit:"Monza",               ideal:[[.45,.53],[.61,.68],[.12,.19],[.64,.70],[.98,1]]},
-  AZ:{gp:"Azerbaijan",     circuit:"Baku",                ideal:[[.43,.46],[.65,.70],[.21,.24],[.61,.67],[.79,.86]]},
-  SG:{gp:"Singapore",      circuit:"Marina Bay",          ideal:[[.38,.49],[.65,.75],[.58,.66],[.35,.53],[.07,.14]]},
-  US:{gp:"United States",  circuit:"Circuit of the Americas",ideal:[[.58,.62],[.28,.44],[.62,.75],[.57,.69],[.33,.47]]},
-  MX:{gp:"Mexico City",    circuit:"Hermanos Rodríguez",  ideal:[[.50,.57],[.34,.46],[.61,.69],[.59,.71],[.36,.49]]},
-  BR:{gp:"São Paulo",      circuit:"Interlagos",          ideal:[[.52,.58],[.39,.49],[.54,.67],[.56,.71],[.42,.50]]},
-  LV:{gp:"Las Vegas",      circuit:"Las Vegas Strip",     ideal:null, base:[0,.214286,1,.375,.55]},
-  QA:{gp:"Qatar",          circuit:"Lusail",              ideal:null, base:[.80,.571429,.25,.8125,.90]},
-  AE:{gp:"Abu Dhabi",      circuit:"Yas Marina",          ideal:[[.45,.53],[.49,.62],[.48,.62],[.47,.69],[.44,.56]]},
-};
-
-const CALENDARS = {
-  2024:["BH","SA","AU","JP","CN","MIA","EMI","MC","CA","ES","AT","GB","HU","BE","NL","IT","AZ","SG","US","MX","BR","LV","QA","AE"],
-  2025:["AU","CN","JP","BH","SA","MIA","EMI","MC","ES","CA","AT","GB","BE","HU","NL","IT","AZ","SG","US","MX","BR","LV","QA","AE"],
-  // 2026: Bahrain & Saudi Arabia were cancelled (22 rounds). Kept at the end, marked, in case you still want to label them.
-  // Madrid (Madring) is not in F1 Manager 2024, so it is hidden from the list; round numbers stay as on the real calendar.
-  2026:["AU","CN","JP","MIA","CA","MC","ES","AT","GB","BE","HU","NL","IT","MAD","AZ","SG","US","MX","BR","LV","QA","AE"],
-};
-const CANCELLED = {2026:["BH","SA"]};
-
-const TEAMS = {
-  RBR:{name:"Red Bull",color:"#3671C6"}, MCL:{name:"McLaren",color:"#FF8000"}, FER:{name:"Ferrari",color:"#E8002D"},
-  MER:{name:"Mercedes",color:"#27F4D2"}, AMR:{name:"Aston Martin",color:"#229971"}, ALP:{name:"Alpine",color:"#0093CC"},
-  WIL:{name:"Williams",color:"#64C4FF"}, RB:{name:"RB",color:"#6692FF"}, VCARB:{name:"Racing Bulls",color:"#6692FF"},
-  SAU:{name:"Kick Sauber",color:"#52E252"}, AUDI:{name:"Audi",color:"#BB0A30"}, HAAS:{name:"Haas",color:"#B6BABD"},
-  CAD:{name:"Cadillac",color:"#C8A45A"},
-};
-const DRIVERS = {
-  2024:[["Max Verstappen","RBR"],["Sergio Pérez","RBR"],["Lando Norris","MCL"],["Oscar Piastri","MCL"],
-        ["Charles Leclerc","FER"],["Carlos Sainz","FER"],["Oliver Bearman","FER"],["Lewis Hamilton","MER"],["George Russell","MER"],
-        ["Fernando Alonso","AMR"],["Lance Stroll","AMR"],["Pierre Gasly","ALP"],["Esteban Ocon","ALP"],["Jack Doohan","ALP"],
-        ["Alexander Albon","WIL"],["Logan Sargeant","WIL"],["Franco Colapinto","WIL"],
-        ["Yuki Tsunoda","RB"],["Daniel Ricciardo","RB"],["Liam Lawson","RB"],
-        ["Valtteri Bottas","SAU"],["Zhou Guanyu","SAU"],["Nico Hülkenberg","HAAS"],["Kevin Magnussen","HAAS"]],
-  2025:[["Max Verstappen","RBR"],["Yuki Tsunoda","RBR"],["Lando Norris","MCL"],["Oscar Piastri","MCL"],
-        ["Charles Leclerc","FER"],["Lewis Hamilton","FER"],["George Russell","MER"],["Kimi Antonelli","MER"],
-        ["Fernando Alonso","AMR"],["Lance Stroll","AMR"],["Pierre Gasly","ALP"],["Franco Colapinto","ALP"],["Jack Doohan","ALP"],
-        ["Alexander Albon","WIL"],["Carlos Sainz","WIL"],["Liam Lawson","VCARB"],["Isack Hadjar","VCARB"],
-        ["Nico Hülkenberg","SAU"],["Gabriel Bortoleto","SAU"],["Esteban Ocon","HAAS"],["Oliver Bearman","HAAS"]],
-  2026:[["Max Verstappen","RBR"],["Isack Hadjar","RBR"],["Lando Norris","MCL"],["Oscar Piastri","MCL"],
-        ["Charles Leclerc","FER"],["Lewis Hamilton","FER"],["George Russell","MER"],["Kimi Antonelli","MER"],
-        ["Fernando Alonso","AMR"],["Lance Stroll","AMR"],["Pierre Gasly","ALP"],["Franco Colapinto","ALP"],
-        ["Alexander Albon","WIL"],["Carlos Sainz","WIL"],["Liam Lawson","VCARB"],["Arvid Lindblad","VCARB"],
-        ["Nico Hülkenberg","AUDI"],["Gabriel Bortoleto","AUDI"],["Esteban Ocon","HAAS"],["Oliver Bearman","HAAS"],
-        ["Sergio Pérez","CAD"],["Valtteri Bottas","CAD"]],
-};
-
-/* ---------------- Storage ---------------- */
-const LS_KEY = "f1m-setup-calc-v1";
-let DB = {ui:{}, sessions:{}, baselines:[], defaultBase:{}};
-try { const raw = localStorage.getItem(LS_KEY); if(raw) DB = Object.assign(DB, JSON.parse(raw)); } catch(e){}
-DB.baselines = DB.baselines||[]; DB.defaultBase = DB.defaultBase||{};
-const save = ()=>{ try{ localStorage.setItem(LS_KEY, JSON.stringify(DB)); }catch(e){} };
-
-/* ---------------- Solver ---------------- */
-function clampIv(list){ return list.map(([a,b])=>[Math.max(0,a),Math.min(1,b)]).filter(([a,b])=>b-a>1e-9); }
-function allowed(fb, v){
-  const o=BAND.opt, g=BAND.great, d=BAND.good, e=1e-4; // small tolerance for rounding
-  switch(fb){
-    case "optimal": return clampIv([[v-o-e,v+o+e]]);
-    case "great":   return clampIv([[v-g-e,v-o+e],[v+o-e,v+g+e]]);
-    case "good":    return clampIv([[v-d-e,v-g+e],[v+g-e,v+d+e]]);
-    case "bad":     return clampIv([[0,v-d+e],[v+d-e,1]]);
-    case "badhigh": return clampIv([[0,v-d+e]]);   // value was too high -> ideal is lower
-    case "badlow":  return clampIv([[v+d-e,1]]);   // value was too low  -> ideal is higher
-    default:        return [[0,1]];
-  }
-}
+/* intersect two sorted lists of [lo,hi] */
 function intersect(A,B){
   const out=[];
-  for(const [a1,b1] of A) for(const [a2,b2] of B){ const a=Math.max(a1,a2), b=Math.min(b1,b2); if(b-a>1e-9) out.push([a,b]); }
-  out.sort((x,y)=>x[0]-y[0]);
-  const m=[]; for(const iv of out){ if(m.length && iv[0]<=m[m.length-1][1]+1e-9) m[m.length-1][1]=Math.max(m[m.length-1][1],iv[1]); else m.push(iv.slice()); }
-  return m;
-}
-function feasibleRegions(runs){
-  const F = STATS.map(()=>[[0,1]]);
-  for(const r of runs){
-    const e = effects(r.s);
-    for(let k=0;k<5;k++) if(r.fb[k] && r.fb[k]!=="unknown") F[k] = intersect(F[k], allowed(r.fb[k], e[k]));
+  for(const [a,b] of A) for(const [c,d] of B){
+    const lo=Math.max(a,c), hi=Math.min(b,d);
+    if(hi>=lo) out.push([lo,hi]);
   }
-  return F;
+  return out;
 }
-/* For each stat, treat the ideal as uniformly spread over what is still possible.
-   Aim at the mean of that region (weighted by how precisely it is known), then
-   brute-force every legal in-game setup (~1M combos) for the best fit.
-   Setups already tried are skipped so every run teaches something new. */
-function solve(runs, startNorm){
-  const F = feasibleRegions(runs);
-  const known = F.map(iv=>!(iv.length===1 && iv[0][0]<=1e-9 && iv[0][1]>=1-1e-9));
-  const empty = F.map(iv=>iv.length===0);
-  const tgt=[], wgt=[], lo=[], hi=[];
-  const startE = effects(startNorm);
-  for(let k=0;k<5;k++){
-    if(empty[k] || !known[k]){
-      tgt[k]=startE[k]; wgt[k]=1/(0.25*0.25); lo[k]=-1; hi[k]=2; continue;
+/* where the ideal can be, given one run's value v and its feedback */
+function allowed(v,f){
+  const [n,x]=EDGE[f], near=Math.max(0,n-SLACK), far=x+SLACK;
+  return near===0 ? [[v-far,v+far]] : [[v-far,v-near],[v+near,v+far]];
+}
+/* remaining range of the ideal for one area */
+function feasible(k,runs,win){
+  const full=[[0,1]];
+  const cons=runs.filter(r=>r.fb[k]).map(r=>allowed(effects(r.s)[k],r.fb[k]));
+  const all=start=>cons.reduce((iv,c)=>intersect(iv,c),start);
+  if(win){
+    const iv=all([[Math.max(0,win[0]-WIN_PAD),Math.min(1,win[1]+WIN_PAD)]]);
+    if(iv.length) return {iv,usedWin:true,conflict:false};
+  }
+  let iv=all(full);
+  if(iv.length) return {iv,usedWin:false,conflict:false,winDropped:!!win};
+  /* feedback contradicts itself: trust the newest runs first */
+  iv=full;
+  for(let i=cons.length-1;i>=0;i--){ const t=intersect(iv,cons[i]); if(t.length) iv=t; }
+  return {iv,usedWin:false,conflict:true};
+}
+const widest = iv => iv.reduce((a,b)=>(b[1]-b[0]>a[1]-a[0]?b:a));
+const inside = (iv,v) => iv.some(([a,b])=>v>=a-1e-9 && v<=b+1e-9);
+
+/* scan every legal setup: count the ones still possible, and rank them:
+   setups inside every remaining range first, then closest to the middle of each range */
+function scan(ivs,skip,keep){
+  const tgt=ivs.map(iv=>{const w=widest(iv);return (w[0]+w[1])/2;});
+  const n=PARAMS.map(p=>p.steps), W=STATS.map(s=>s.w.map((w,i)=>w/n[i])), B=STATS.map(s=>s.base);
+  const skipSet=new Set(skip.map(s=>s.join()));
+  const top=[]; let count=0;
+  const e=[0,0,0,0,0];
+  for(let a=0;a<=n[0];a++) for(let b=0;b<=n[1];b++) for(let c=0;c<=n[2];c++)
+  for(let d=0;d<=n[3];d++) for(let t=0;t<=n[4];t++){
+    let cost=0, ok=true;
+    for(let k=0;k<5;k++){
+      const w=W[k], v=B[k]+w[0]*a+w[1]*b+w[2]*c+w[3]*d+w[4]*t;
+      e[k]=v;
+      const z=v-tgt[k]; cost+=z*z;
+      /* distance outside the remaining range counts far more than distance to target */
+      const iv=ivs[k]; let out=Infinity;
+      for(let j=0;j<iv.length;j++){
+        const o=v<iv[j][0]?iv[j][0]-v:v>iv[j][1]?v-iv[j][1]:0;
+        if(o<out){ out=o; if(o===0) break; }
+      }
+      if(out>1e-9){ ok=false; cost+=1e4*out*out+1; }
     }
-    let L=0, m1=0, m2=0;
-    for(const [a,b] of F[k]){ const w=b-a; L+=w; m1+=w*(a+b)/2; m2+=(b*b*b-a*a*a)/3; }
-    const mean=m1/L, vari=Math.max(m2/L-mean*mean, 0.003*0.003);
-    tgt[k]=mean; wgt[k]=1/vari; lo[k]=F[k][0][0]; hi[k]=F[k][F[k].length-1][1];
+    if(ok) count++;
+    if(top.length<keep || cost<top[top.length-1].cost){
+      const s=[a,b,c,d,t];
+      if(skipSet.size && skipSet.has(s.join())) continue;
+      let i=top.length; while(i>0 && top[i-1].cost>cost) i--;
+      top.splice(i,0,{s,e:e.slice(),cost});
+      if(top.length>keep) top.pop();
+    }
   }
-  const n=PARAMS.map(p=>p.n);
-  const tried = new Set(runs.map(r=>r.s.map((x,i)=>Math.round(x*n[i])).join(",")));
-  const contrib = PARAMS.map((p,i)=>Array.from({length:p.n+1},(_,j)=>STATS.map(st=>st.w[i]*j/p.n)));
-  const off = STATS.map(s=>s.offset);
-  let bestCost=Infinity, bestIdx=null;
-  for(let a=0;a<=n[0];a++){ const ca=contrib[0][a];
-   for(let b=0;b<=n[1];b++){ const cb=contrib[1][b];
-    for(let c=0;c<=n[2];c++){ const cc=contrib[2][c];
-     for(let d=0;d<=n[3];d++){ const cd=contrib[3][d];
-      for(let f=0;f<=n[4];f++){ const cf=contrib[4][f];
-        let cost=0;
-        for(let k=0;k<5;k++){
-          const v=off[k]+ca[k]+cb[k]+cc[k]+cd[k]+cf[k];
-          const dv=v-tgt[k]; cost+=wgt[k]*dv*dv;
-          if(v<lo[k]) cost+=100*wgt[k]*(lo[k]-v)*(lo[k]-v); else if(v>hi[k]) cost+=100*wgt[k]*(v-hi[k])*(v-hi[k]);
-          if(cost>=bestCost) break;
-        }
-        if(cost<bestCost && !tried.has(a+","+b+","+c+","+d+","+f)){ bestCost=cost; bestIdx=[a,b,c,d,f]; }
-  }}}}}
-  if(!bestIdx) bestIdx = startNorm.map((x,i)=>Math.round(x*n[i]));
-  const recNorm = bestIdx.map((j,i)=>j/n[i]);
-  return {F, known, empty, recNorm, recE:effects(recNorm), tgt};
+  return {count,top,tgt};
+}
+function solve(slot){
+  const t=TRACK[slot.track];
+  const areas=STATS.map((_,k)=>feasible(k,slot.runs,slot.useWin && t.win ? t.win[k] : null));
+  const res=scan(areas.map(a=>a.iv),slot.runs.map(r=>r.s),6);
+  return {areas,...res};
+}
+function preset(trackId){
+  const t=TRACK[trackId];
+  if(!t.win) return t.base.map((x,i)=>Math.round(x*PARAMS[i].steps));
+  return scan(t.win.map(w=>[w]),[],1).top[0].s;
 }
 
-/* ---------------- UI state ---------------- */
-const $ = id => document.getElementById(id);
-let cur = {year:null, track:null, driver:null};
-let fbDraft = ["unknown","unknown","unknown","unknown","unknown"];
-let lastSolve = null;
+/* ============ State ============ */
+const KEY="f1m24-setup-calc";
+const newSlot=(name,track="BH")=>({name,track,useWin:true,setup:preset(track),fb:[null,null,null,null,null],runs:[]});
+function load(){
+  try{
+    const s=JSON.parse(localStorage.getItem(KEY));
+    if(s && Array.isArray(s.slots) && s.slots.length && s.slots.every(x=>TRACK[x.track] && x.setup && x.runs)) return s;
+  }catch(e){}
+  return {active:0,theme:null,slots:[newSlot("Car 1"),newSlot("Car 2")]};
+}
+let state=load();
+let result=null;      // solver output for the active car
+let note=null;        // one-off status message
+const save=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(state)); }catch(e){} };
+const cur=()=>state.slots[Math.min(state.active,state.slots.length-1)];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const f3=v=>Math.max(0,v).toFixed(3).replace(/^0\./,".");
+const lastRun=()=>{const r=cur().runs;return r.length?r[r.length-1]:null;};
 
-function sessionKey(){ return `${cur.year}|${cur.track}|${cur.driver}`; }
-function session(){
-  const k=sessionKey();
-  if(!DB.sessions[k]) DB.sessions[k] = {setup:baselineNorm(cur.track), runs:[]};
-  return DB.sessions[k];
+/* ============ Rendering ============ */
+function renderTabs(){
+  $("tabs").innerHTML=state.slots.map((s,i)=>
+    `<button class="tab" role="tab" type="button" aria-selected="${i===state.active}" data-i="${i}">${esc(s.name||"Car "+(i+1))}</button>`
+  ).join("")+`<button class="tab" type="button" data-add="1" aria-label="Add car">+ Add car</button>`;
 }
-function presetNorm(code){
-  const t=TRACKS[code];
-  if(t && t.base) return t.base.map((x,i)=>snapIdx(i,x)/PARAMS[i].n);
-  if(!t || !t.ideal) return [0.5,0.5,0.5,0.5,0.5];
-  const mid=t.ideal.map(([a,b])=>(a+b)/2);
-  return setupFromEffects(mid).map((x,i)=>snapIdx(i,Math.max(0,Math.min(1,x)))/PARAMS[i].n);
+function renderSession(){
+  const s=cur(), t=TRACK[s.track];
+  $("carName").value=s.name;
+  $("trackSel").innerHTML=TRACKS.map((t,i)=>`<option value="${t.id}">R${i+1} · ${esc(t.name)} — ${esc(t.place)}</option>`).join("");
+  $("trackSel").value=s.track;
+  $("useWin").checked=s.useWin && !!t.win;
+  $("useWin").disabled=!t.win;
+  $("winLabel").textContent=t.win ? "Start from this track's usual range" : "No range data for this track";
+  $("removeCar").hidden=state.slots.length<2;
 }
-/* starting setup for a track: your default baseline if set, else the built-in track baseline */
-function baselineNorm(code){
-  const id=DB.defaultBase[code], b=id && DB.baselines.find(x=>x.id===id);
-  return b ? b.s.slice() : presetNorm(code);
+function renderSetup(){
+  const s=cur(), last=lastRun();
+  $("setupRows").innerHTML=PARAMS.map((p,i)=>`
+    <div class="rowi">
+      <div class="rowhead">
+        <span class="name">${p.name}</span><span class="sp"></span>
+        <span class="prev num" id="prev${i}"></span>
+        <span class="val num" id="val${i}"></span>
+      </div>
+      <div class="slide">
+        <button class="step" type="button" data-step="-1" data-i="${i}" aria-label="${p.name} down one step">−</button>
+        <input type="range" min="0" max="${p.steps}" step="1" value="${s.setup[i]}" data-i="${i}" aria-label="${p.name}">
+        <button class="step" type="button" data-step="1" data-i="${i}" aria-label="${p.name} up one step">+</button>
+      </div>
+    </div>`).join("");
+  $("lastBtn").hidden=!last;
+  updateLive();
 }
-function driverName(){
-  if(cur.driver==="__custom") return ($("customName").value.trim()||"Custom driver");
-  return cur.driver;
+function renderFeedback(){
+  const s=cur();
+  $("fbRows").innerHTML=STATS.map((st,k)=>`
+    <div class="rowi">
+      <div class="rowhead"><span class="name">${st.name}</span><span class="sp"></span><span class="prev num" id="ev${k}"></span></div>
+      <div class="chips" role="group" aria-label="${st.name} feedback">
+        ${FB.map(([f,label])=>`<button class="chip" type="button" data-k="${k}" data-f="${f}" aria-pressed="${s.fb[k]===f}">${label}</button>`).join("")}
+      </div>
+      <div class="bar" id="bar${k}"></div>
+      <div class="barnote num" id="bn${k}"></div>
+    </div>`).join("");
+  updateLive();
 }
-
-function fillYear(){
-  const ys=Object.keys(CALENDARS);
-  $("year").innerHTML = ys.map(y=>`<option value="${y}">${y}${y==="2024"?" (in-game)":""}</option>`).join("");
-  cur.year = DB.ui.year && CALENDARS[DB.ui.year] ? DB.ui.year : "2025";
-  $("year").value = cur.year;
+/* parts that change while a slider moves */
+function updateLive(){
+  const s=cur(), last=lastRun(), e=effects(s.setup);
+  PARAMS.forEach((p,i)=>{
+    const v=$("val"+i); if(!v) return;
+    v.textContent=p.fmt(s.setup[i]);
+    const pr=$("prev"+i);
+    pr.textContent=last?`last run ${p.fmt(last.s[i])}`:"";
+    pr.classList.toggle("changed",!!last && last.s[i]!==s.setup[i]);
+    const r=document.querySelector(`#setupRows input[data-i="${i}"]`);
+    if(r && +r.value!==s.setup[i]) r.value=s.setup[i];
+  });
+  if(!result) return;
+  STATS.forEach((st,k)=>{
+    const bar=$("bar"+k); if(!bar) return;
+    const a=result.areas[k], pos=Math.max(0,Math.min(1,e[k]));
+    bar.innerHTML=a.iv.map(([lo,hi])=>`<span class="win" style="left:${(lo*100).toFixed(2)}%;width:${((hi-lo)*100).toFixed(2)}%"></span>`).join("")
+      +`<span class="mark" style="left:${(pos*100).toFixed(2)}%"></span>`;
+    $("ev"+k).textContent=`this setup ${f3(e[k])}`;
+    const range=a.iv.map(([lo,hi])=>`${f3(Math.max(0,lo))}–${f3(Math.min(1,hi))}`).join(" or ");
+    $("bn"+k).innerHTML=`<span>Ideal is in ${range}</span>`
+      +(a.conflict?`<span class="warn">Feedback doesn't add up — check your runs</span>`
+        :a.winDropped?`<span>Outside the track's usual range</span>`
+        :`<span>${inside(a.iv,e[k])?"Setup is inside":"Setup is outside"}</span>`);
+  });
 }
-function fillTrack(){
-  const full=CALENDARS[cur.year], canc=CANCELLED[cur.year]||[];
-  const cal=full.filter(c=>TRACKS[c].inGame!==false);
-  let html = cal.map(c=>`<option value="${c}">R${full.indexOf(c)+1} · ${TRACKS[c].gp} — ${TRACKS[c].circuit}</option>`).join("");
-  if(canc.length) html += `<optgroup label="Cancelled">`+canc.map(c=>`<option value="${c}">${TRACKS[c].gp} — ${TRACKS[c].circuit} (cancelled)</option>`).join("")+`</optgroup>`;
-  $("track").innerHTML = html;
-  const want = DB.ui.track;
-  cur.track = (want && (cal.includes(want)||canc.includes(want))) ? want : cal[0];
-  $("track").value = cur.track;
+function renderCands(){
+  const s=cur(), now=s.setup;
+  if(!result.top.length){ $("cands").innerHTML=`<div class="empty">No setups left to suggest.</div>`; return; }
+  $("cands").innerHTML=`<table>
+    <thead><tr><th>#</th>${PARAMS.map(p=>`<th>${p.short}</th>`).join("")}
+      ${STATS.map((st,k)=>`<th class="${k?"":"sep"}">${st.name}</th>`).join("")}<th></th></tr></thead>
+    <tbody>${result.top.map((c,i)=>{
+      const on=c.s.every((v,j)=>v===now[j]);
+      return `<tr><td class="num">${i+1}</td>
+      ${c.s.map((v,j)=>`<td class="num${v!==now[j]?" diff":""}">${PARAMS[j].fmt(v)}</td>`).join("")}
+      ${c.e.map((v,k)=>`<td class="num ${k?"":"sep"}"><span class="dot ${inside(result.areas[k].iv,v)?"in":""}"></span>${f3(v)}</td>`).join("")}
+      <td>${on?`<span class="muted">On car</span>`:`<button class="btn sm" type="button" data-cand="${i}">Use</button>`}</td></tr>`;
+    }).join("")}</tbody></table>`;
 }
-function fillDriver(){
-  const ds=DRIVERS[cur.year];
-  $("driver").innerHTML = ds.map(([n,t])=>`<option value="${n}">${n} · ${TEAMS[t].name}</option>`).join("") + `<option value="__custom">Custom…</option>`;
-  const want = DB.ui.driver;
-  cur.driver = (want==="__custom" || ds.some(d=>d[0]===want)) ? want : ds[0][0];
-  $("driver").value = cur.driver;
-  $("customWrap").style.display = cur.driver==="__custom" ? "" : "none";
-  $("customName").value = DB.ui.customName||"";
+function renderRuns(){
+  const s=cur();
+  $("clearRuns").hidden=!s.runs.length;
+  if(!s.runs.length){ $("runs").innerHTML=`<div class="empty">No runs yet. Set the feedback above and press Find setup.</div>`; return; }
+  $("runs").innerHTML=`<table>
+    <thead><tr><th>Run</th>${PARAMS.map(p=>`<th>${p.short}</th>`).join("")}
+      ${STATS.map((st,k)=>`<th class="${k?"":"sep"}">${st.name}</th>`).join("")}<th></th></tr></thead>
+    <tbody>${s.runs.map((r,i)=>`<tr><td class="num">${i+1}</td>
+      ${r.s.map((v,j)=>`<td class="num">${PARAMS[j].fmt(v)}</td>`).join("")}
+      ${r.fb.map((f,k)=>`<td class="${k?"":"sep"}"><span class="pill ${f||"n"}">${f?FBNAME[f]:"—"}</span></td>`).join("")}
+      <td><button class="btn quiet sm" type="button" data-loadrun="${i}">Load</button>
+          <button class="btn quiet sm" type="button" data-delrun="${i}" aria-label="Delete run ${i+1}">Delete</button></td></tr>`).reverse().join("")}</tbody></table>`;
 }
-function renderChip(){
-  const d = DRIVERS[cur.year].find(x=>x[0]===cur.driver);
-  const team = d ? TEAMS[d[1]] : {name:"Custom",color:"var(--muted)"};
-  $("chip").innerHTML = `<i style="background:${team.color}"></i>${esc(driverName())} <span class="muted" style="font-weight:400">· ${team.name} · ${cur.year} ${esc(TRACKS[cur.track].gp)} GP</span>`;
-  const t=TRACKS[cur.track];
-  const notes=[];
-  if((CANCELLED[cur.year]||[]).includes(cur.track)) notes.push("This race was cancelled in "+cur.year+".");
-  const hidden=CALENDARS[cur.year].filter(c=>TRACKS[c].inGame===false);
-  if(hidden.length) notes.push(hidden.map(c=>TRACKS[c].circuit).join(", ")+" is not in F1 Manager 2024, so it isn't listed.");
-  if(cur.year!=="2024") notes.push("Setups are for F1 Manager 2024's cars and tracks; the "+cur.year+" season and driver are labels for your save.");
-  $("trackNote").textContent = notes.join(" ");
-  $("histTitle").textContent = `${driverName()} · ${t.gp} ${cur.year}`;
-}
-function esc(s){ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
-
-function renderParams(){
-  const s=session().setup;
-  $("params").innerHTML = PARAMS.map((p,i)=>{
-    const v=fromNorm(i,s[i]);
-    const idx=snapIdx(i,s[i]);
-    return `<div class="param"><div class="name">${p.name}</div><div class="val" id="pv${i}">${p.fmt(v)}</div>
-      <div class="ctl"><button class="step" data-i="${i}" data-d="-1" aria-label="Decrease ${p.name}">−</button>
-      <input type="range" min="0" max="${p.n}" step="1" value="${idx}" data-i="${i}" aria-label="${p.name}" style="--pct:${idx/p.n*100}%">
-      <button class="step" data-i="${i}" data-d="1" aria-label="Increase ${p.name}">+</button></div>
-      <div class="ticks"><span>${p.fmt(p.min)}</span><span>${p.fmt(p.max)}</span></div></div>`;
-  }).join("");
-  const setIdx=(i,idx)=>{
-    idx=Math.max(0,Math.min(PARAMS[i].n,idx));
-    session().setup[i]=idx/PARAMS[i].n;
-    const el=$("params").querySelector(`input[data-i="${i}"]`); el.value=idx; el.style.setProperty("--pct",idx/PARAMS[i].n*100+"%");
-    $("pv"+i).textContent = PARAMS[i].fmt(fromNorm(i,session().setup[i]));
-    save(); renderBars();
-  };
-  $("params").querySelectorAll("input[type=range]").forEach(el=>el.addEventListener("input",()=>setIdx(+el.dataset.i,+el.value)));
-  $("params").querySelectorAll(".step").forEach(b=>b.addEventListener("click",()=>{
-    const i=+b.dataset.i; setIdx(i, snapIdx(i,session().setup[i]) + (+b.dataset.d));
-  }));
-}
-function renderFb(){
-  const MAIN=["unknown","optimal","great","good","bad"];
-  const isBad=f=>f==="bad"||f==="badhigh"||f==="badlow";
-  $("fbgrid").innerHTML = STATS.map((st,k)=>{
-    const f=fbDraft[k];
-    const main=MAIN.map(m=>{ const on = m===f || (m==="bad"&&isBad(f));
-      return `<button class="chip fb-${m}${on?" on":""}" data-k="${k}" data-v="${m}" aria-pressed="${on}">${FB_LABEL[m]}</button>`; }).join("");
-    const sub = isBad(f) ? `<div class="chips" style="margin-top:6px">`+[["bad","Direction ?"],["badhigh","Too high ↑"],["badlow","Too low ↓"]]
-      .map(([v,l])=>`<button class="chip sub fb-bad${v===f?" on":""}" data-k="${k}" data-v="${v}" aria-pressed="${v===f}">${l}</button>`).join("")+`</div>` : "";
-    return `<div class="fbrow"><div class="lbl">${st.name}</div><div><div class="chips">${main}</div>${sub}</div></div>`;
-  }).join("");
-  $("fbgrid").querySelectorAll(".chip").forEach(b=>b.addEventListener("click",()=>{
-    const k=+b.dataset.k, v=b.dataset.v;
-    fbDraft[k] = (v==="bad" && isBad(fbDraft[k]) && !b.classList.contains("sub")) ? fbDraft[k] : v;
-    renderFb();
-  }));
-}
-function runSolve(){
-  const ses=session();
-  const start = ses.runs.length ? ses.runs[ses.runs.length-1].s : baselineNorm(cur.track);
-  lastSolve = solve(ses.runs, start);
-  renderRec(); renderBars();
-}
-function renderRec(){
-  const r=lastSolve, ses=session();
-  $("rec").innerHTML = PARAMS.map((p,i)=>{
-    const ref = ses.runs.length ? ses.runs[ses.runs.length-1].s : ses.setup;
-    const v=fromNorm(i,r.recNorm[i]), now=fromNorm(i,ref[i]);
-    const diff = Math.round((v-now)/p.step);
-    const dtxt = (diff===0 ? "same" : (diff>0?"+":"−")+Math.abs(diff)+" click"+(Math.abs(diff)>1?"s":"")) + (ses.runs.length?" vs last run":"");
-    return `<div><div class="k">${p.name}</div><div class="v">${p.fmt(v)}</div><div class="d">${dtxt}</div></div>`;
-  }).join("");
-  const st=$("status"); st.className="status";
-  if(r.empty.some(x=>x)){
-    const bad=STATS.filter((_,k)=>r.empty[k]).map(s=>s.name).join(", ");
-    st.className="status warn";
-    st.textContent=`Your feedback contradicts itself for ${bad}. Check the last runs (wrong setup value or feedback entered?) and remove the bad one.`;
-    return;
+function renderStatus(){
+  const s=cur(), last=lastRun(), el=$("status");
+  const done=last && last.fb.every(f=>f==="o");
+  el.classList.toggle("done",!!done);
+  $("possible").textContent=result.count
+    ? `${result.count.toLocaleString("en-US")} of ${TOTAL.toLocaleString("en-US")} setups still possible`
+    : "No setup fits every range — showing the closest";
+  let msg;
+  if(note){ msg=note; }
+  else if(done){ msg=`<strong>All five areas are Optimal.</strong> <span class="muted">Run ${s.runs.length} is the setup to keep.</span>`; }
+  else if(!s.runs.length){ msg=`<strong>${esc(TRACK[s.track].name)}.</strong> <span class="muted">Put this setup on the car, run a stint, then enter the feedback.</span>`; }
+  else{
+    const locked=result.areas.filter((a,k)=>s.runs.some(r=>r.fb[k]==="o")).length;
+    msg=`<strong>${s.runs.length} run${s.runs.length>1?"s":""} logged.</strong> <span class="muted">${locked} of 5 areas have hit Optimal at least once.</span>`;
   }
-  if(!ses.runs.length){ st.textContent = "This is your baseline for this track. Run it in practice, enter the feedback, and press “Add practice run”."; return; }
-  const widths = r.F.map(iv=>iv.reduce((a,[x,y])=>a+(y-x),0));
-  const nailed = widths.filter(w=>w<=2*BAND.opt+0.003).length;
-  const unknown = r.known.filter(x=>!x).length;
-  const inside = r.recE.map((v,k)=>r.F[k].some(([a,b])=>v>=a-1e-6&&v<=b+1e-6));
-  if(nailed===5 && inside.every(x=>x)){ st.className="status good"; st.textContent="All five stats are pinned down — this setup should give Optimal (or as close as the in-game steps allow) across the board."; return; }
-  st.textContent = `${ses.runs.length} run${ses.runs.length>1?"s":""} logged · ${nailed}/5 stats pinned down`+(unknown?` · ${unknown} with no feedback yet`:"")+`. Try the recommended setup next.`;
+  el.innerHTML=msg;
 }
-function renderBars(){
-  if(!lastSolve) return;
-  const r=lastSolve, curE=effects(session().setup);
-  $("bars").innerHTML = STATS.map((st,k)=>{
-    const feas = r.F[k].map(([a,b])=>`<div class="feas" style="left:${a*100}%;width:${(b-a)*100}%"></div>`).join("");
-    const c=Math.max(0,Math.min(1,curE[k])), rc=Math.max(0,Math.min(1,r.recE[k]));
-    const w = r.F[k].reduce((a,[x,y])=>a+(y-x),0);
-    const lab = r.empty[k] ? `<span style="color:var(--bad)">conflict</span>` :
-      !r.known[k] ? `<span class="muted">unknown</span>` :
-      `${r.F[k].map(([a,b])=>a.toFixed(3)+"–"+b.toFixed(3)).join(", ")}`;
-    return `<div class="barrow"><div class="lbl">${st.name}</div>
-      <div class="bar" title="width ${w.toFixed(3)}">${feas}<div class="mk cur" style="left:${c*100}%"></div><div class="mk rec" style="left:${rc*100}%"></div></div>
-      <div class="st">${lab}</div></div>`;
-  }).join("");
+function recompute(){ result=solve(cur()); }
+function renderAll(){
+  recompute();
+  renderTabs(); renderSession(); renderSetup(); renderFeedback(); renderCands(); renderRuns(); renderStatus();
+  save();
 }
-function fbPill(fb){
-  const cls = {optimal:"fb-optimal",great:"fb-great",good:"fb-good",bad:"fb-bad",badhigh:"fb-bad",badlow:"fb-bad"}[fb]||"fb-unknown";
-  return `<td><span class="pill ${cls}">${FB_LABEL[fb]||"—"}</span></td>`;
-}
-function renderHist(){
-  const runs=session().runs;
-  if(!runs.length){ $("hist").innerHTML = `<tr><td class="muted">No runs yet for this driver at this track.</td></tr>`; return; }
-  $("hist").innerHTML = `<tr><th>#</th>${PARAMS.map(p=>`<th>${p.name}</th>`).join("")}${STATS.map(s=>`<th>${s.name}</th>`).join("")}</tr>` +
-    runs.map((r,n)=>`<tr><td>${n+1}</td>${PARAMS.map((p,i)=>`<td>${p.fmt(fromNorm(i,r.s[i]))}</td>`).join("")}${r.fb.map(fbPill).join("")}</tr>`).join("");
-}
-function renderBase(keep){
-  const sel=$("baseSel"), prev=keep||sel.value;
-  const def=DB.defaultBase[cur.track];
-  const mine=DB.baselines.filter(b=>b.track===cur.track), other=DB.baselines.filter(b=>b.track!==cur.track);
-  const opt=b=>`<option value="${b.id}">${esc(b.name)}${b.id===def?" ★ default":""}</option>`;
-  sel.innerHTML = `<option value="__track">${esc(TRACKS[cur.track].circuit)} built-in baseline${def?"":" ★ default"}</option>`
-    + (mine.length?`<optgroup label="Your baselines · this track">${mine.map(opt).join("")}</optgroup>`:"")
-    + (other.length?`<optgroup label="Your baselines · other tracks">${other.map(b=>opt({...b,name:b.name+" ("+(TRACKS[b.track]?TRACKS[b.track].circuit:"any")+")"})).join("")}</optgroup>`:"");
-  sel.value = [...sel.options].some(o=>o.value===prev) ? prev : (def||"__track");
-  const b=DB.baselines.find(x=>x.id===sel.value);
-  const s = b ? b.s : presetNorm(cur.track);
-  $("baseNote").textContent = PARAMS.map((p,i)=>p.name+" "+p.fmt(fromNorm(i,s[i]))).join(" · ");
-  $("baseDel").disabled = !b;
-}
-function renderAll(){ renderChip(); renderParams(); renderFb(); renderHist(); renderBase(); runSolve(); }
 
-function persistUi(){ DB.ui = {year:cur.year, track:cur.track, driver:cur.driver, customName:$("customName").value, theme:DB.ui.theme}; save(); }
+/* ============ Actions ============ */
+function setParam(i,v){
+  const s=cur();
+  s.setup[i]=Math.max(0,Math.min(PARAMS[i].steps,v));
+  updateLive(); renderCands(); save();
+}
+function findSetup(){
+  const s=cur();
+  note=null;
+  if(s.fb.some(Boolean)){
+    s.runs.push({s:s.setup.slice(),fb:s.fb.slice()});
+    s.fb=[null,null,null,null,null];
+  }else if(!s.runs.length && !(s.useWin && TRACK[s.track].win)){
+    note=`<strong>Enter some feedback first.</strong> <span class="muted">Tap what the driver said for at least one area.</span>`;
+  }
+  recompute();
+  const last=lastRun();
+  const done=last && last.fb.every(f=>f==="o");
+  if(!done && !note && result.top.length) s.setup=result.top[0].s.slice();
+  renderAll();
+  note=null;
+}
 
-/* ---------------- Events ---------------- */
-$("year").addEventListener("change",()=>{ cur.year=$("year").value; fillTrack(); fillDriver(); persistUi(); renderAll(); });
-$("track").addEventListener("change",()=>{ cur.track=$("track").value; fbDraft.fill("unknown"); persistUi(); renderAll(); });
-$("driver").addEventListener("change",()=>{ cur.driver=$("driver").value; $("customWrap").style.display=cur.driver==="__custom"?"":"none"; fbDraft.fill("unknown"); persistUi(); renderAll(); });
-$("customName").addEventListener("input",()=>{ persistUi(); renderChip(); });
-$("addRun").addEventListener("click",()=>{
-  if(fbDraft.every(f=>f==="unknown")){ $("status").className="status warn"; $("status").textContent="Set at least one feedback before adding the run."; return; }
-  const ses=session();
-  ses.runs.push({s:ses.setup.map((x,i)=>snapIdx(i,x)/PARAMS[i].n), fb:fbDraft.slice(), t:Date.now()});
-  fbDraft.fill("unknown"); runSolve();
-  ses.setup = lastSolve.recNorm.slice();   // move sliders to the next suggestion
-  save(); renderParams(); renderFb(); renderHist(); runSolve();
+$("tabs").addEventListener("click",ev=>{
+  const b=ev.target.closest("button"); if(!b) return;
+  if(b.dataset.add){
+    state.slots.push(newSlot("Car "+(state.slots.length+1),cur().track));
+    state.active=state.slots.length-1;
+  }else state.active=+b.dataset.i;
+  renderAll();
 });
-$("resetFb").addEventListener("click",()=>{ fbDraft.fill("unknown"); renderFb(); });
-$("useRec").addEventListener("click",()=>{ if(!lastSolve) return; session().setup=lastSolve.recNorm.slice(); save(); renderParams(); renderRec(); renderBars(); });
-$("baseSel").addEventListener("change",()=>renderBase());
-$("baseLoad").addEventListener("click",()=>{
-  const b=DB.baselines.find(x=>x.id===$("baseSel").value);
-  session().setup = b ? b.s.slice() : presetNorm(cur.track); save(); renderParams(); runSolve();
+$("carName").addEventListener("input",ev=>{ cur().name=ev.target.value; renderTabs(); save(); });
+$("trackSel").addEventListener("change",ev=>{
+  const s=cur();
+  if(s.runs.length && !confirm("Changing track clears this car's practice runs. Continue?")){ ev.target.value=s.track; return; }
+  s.track=ev.target.value; s.runs=[]; s.fb=[null,null,null,null,null]; s.useWin=true; s.setup=preset(s.track);
+  renderAll();
 });
-$("baseSave").addEventListener("click",()=>{
-  const name=(prompt("Name for this baseline:", `${TRACKS[cur.track].circuit} base`)||"").trim().slice(0,40);
-  if(!name) return;
-  const id="b"+Date.now().toString(36);
-  DB.baselines.push({id,name,track:cur.track,s:session().setup.map((x,i)=>snapIdx(i,x)/PARAMS[i].n)});
-  save(); renderBase(id);
+$("useWin").addEventListener("change",ev=>{ cur().useWin=ev.target.checked; renderAll(); });
+$("removeCar").addEventListener("click",()=>{
+  if(state.slots.length<2 || !confirm(`Remove "${cur().name}" and its runs?`)) return;
+  state.slots.splice(state.active,1);
+  state.active=Math.max(0,state.active-1);
+  renderAll();
 });
-$("baseDefault").addEventListener("click",()=>{
-  const v=$("baseSel").value;
-  if(v==="__track") delete DB.defaultBase[cur.track]; else DB.defaultBase[cur.track]=v;
-  save(); renderBase(v); if(!session().runs.length) runSolve();
+$("setupRows").addEventListener("input",ev=>{
+  if(ev.target.type==="range") setParam(+ev.target.dataset.i,+ev.target.value);
 });
-$("baseDel").addEventListener("click",()=>{
-  const v=$("baseSel").value, b=DB.baselines.find(x=>x.id===v); if(!b || !confirm(`Delete baseline "${b.name}"?`)) return;
-  DB.baselines=DB.baselines.filter(x=>x.id!==v);
-  for(const t in DB.defaultBase) if(DB.defaultBase[t]===v) delete DB.defaultBase[t];
-  save(); renderBase("__track");
+$("setupRows").addEventListener("click",ev=>{
+  const b=ev.target.closest("button[data-step]"); if(!b) return;
+  const i=+b.dataset.i; setParam(i,cur().setup[i]+ +b.dataset.step);
 });
-$("undo").addEventListener("click",()=>{ session().runs.pop(); save(); renderHist(); runSolve(); });
-$("clearAll").addEventListener("click",()=>{ if(!confirm("Delete all runs for this driver at this track?")) return; delete DB.sessions[sessionKey()]; save(); renderAll(); });
-$("exportBtn").addEventListener("click",()=>{
-  const json=JSON.stringify(DB,null,1);
-  // Inside the iOS app: hand the file to the native share sheet.
-  const bridge = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.exportData;
-  if(bridge){ bridge.postMessage(json); return; }
-  const blob=new Blob([json],{type:"application/json"});
-  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="f1m-setups.json"; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+$("fbRows").addEventListener("click",ev=>{
+  const b=ev.target.closest(".chip"); if(!b) return;
+  const s=cur(), k=+b.dataset.k;
+  s.fb[k]=s.fb[k]===b.dataset.f?null:b.dataset.f;
+  b.parentElement.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed",String(c.dataset.f===s.fb[k])));
+  save();
 });
-$("importBtn").addEventListener("click",()=>$("importFile").click());
-$("importFile").addEventListener("change",async ev=>{
-  const f=ev.target.files[0]; if(!f) return;
-  try{ const d=JSON.parse(await f.text()); if(!d.sessions) throw 0; DB.sessions=Object.assign(DB.sessions,d.sessions);
-    if(Array.isArray(d.baselines)) for(const b of d.baselines) if(!DB.baselines.some(x=>x.id===b.id)) DB.baselines.push(b);
-    if(d.defaultBase) DB.defaultBase=Object.assign(DB.defaultBase,d.defaultBase); save(); renderAll(); alert("Imported."); }
-  catch(e){ alert("That file doesn't look like an export from this tool."); }
-  ev.target.value="";
+$("presetBtn").addEventListener("click",()=>{ cur().setup=preset(cur().track); renderAll(); });
+$("lastBtn").addEventListener("click",()=>{ const l=lastRun(); if(l){ cur().setup=l.s.slice(); renderAll(); } });
+$("findBtn").addEventListener("click",findSetup);
+$("cands").addEventListener("click",ev=>{
+  const b=ev.target.closest("button[data-cand]"); if(!b) return;
+  cur().setup=result.top[+b.dataset.cand].s.slice(); renderAll();
 });
+$("runs").addEventListener("click",ev=>{
+  const b=ev.target.closest("button"); if(!b) return;
+  const s=cur();
+  if(b.dataset.loadrun!==undefined){ s.setup=s.runs[+b.dataset.loadrun].s.slice(); }
+  else if(b.dataset.delrun!==undefined){ s.runs.splice(+b.dataset.delrun,1); }
+  renderAll();
+});
+$("clearRuns").addEventListener("click",()=>{
+  const s=cur();
+  if(!s.runs.length || !confirm("Clear all practice runs for this car?")) return;
+  s.runs=[]; s.fb=[null,null,null,null,null]; s.setup=preset(s.track);
+  renderAll();
+});
+function applyTheme(){
+  if(state.theme) document.documentElement.dataset.theme=state.theme;
+  else delete document.documentElement.dataset.theme;
+}
 $("themeBtn").addEventListener("click",()=>{
-  const dark = DB.ui.theme ? DB.ui.theme==="dark" : matchMedia("(prefers-color-scheme: dark)").matches;
-  DB.ui.theme = dark ? "light" : "dark"; document.documentElement.dataset.theme = DB.ui.theme; save();
+  const dark=state.theme ? state.theme==="dark" : !matchMedia("(prefers-color-scheme: light)").matches;
+  state.theme=dark?"light":"dark"; applyTheme(); save();
 });
 
-/* ---------------- Boot ---------------- */
-if(DB.ui.theme) document.documentElement.dataset.theme = DB.ui.theme;
-fillYear(); fillTrack(); fillDriver(); renderAll();
-if("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("sw.js").catch(()=>{});
+applyTheme();
+renderAll();
+window.F1M={PARAMS,STATS,TRACKS,effects,solve,preset,feasible};
 </script>
 </body>
 </html>
